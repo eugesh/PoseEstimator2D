@@ -3,8 +3,8 @@
 
 #include "sim_2d.h"
 //#include "opencv2/opencv.hpp"
-#include <opencv2/video.hpp>
-#include <opencv2/videoio.hpp>
+#include <opencv2/video/video.hpp>
+// #include <opencv2/video/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 #include <QObject>

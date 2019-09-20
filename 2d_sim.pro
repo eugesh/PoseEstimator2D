@@ -9,6 +9,8 @@ QT += core gui widgets network
 TARGET = 2d_sim
 TEMPLATE = app
 
+LIBS += -L/usr/local/cuda/lib64 -lcudart
+
 unix {
 INCLUDEPATH = /usr/local/include/opencv2/
 #LIBS += -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_contrib -lopencv
@@ -31,6 +33,9 @@ CONFIG += c++11
 
 SOURCES += \
     arucomatcher2d.cpp \
+    cContourBuilder.cpp \
+    cudaWrapper.cpp \
+    i_ContoursMatcher.cpp \
     mainwindow.cpp \
     #opticalflowmatcher2d.cpp \
     sim_2d.cpp \
@@ -38,8 +43,11 @@ SOURCES += \
 
 HEADERS += \
     arucomatcher2d.h \
+    cContourBuilder.h \
+    cudaWrapper.h \
     cv_math.hpp \
     ehmath.hpp \
+    i_ContoursMatcher.h \
     mainwindow.h \
     #opticalflowmatcher2d.h \
     sim_2d.h \
@@ -55,3 +63,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 #DISTFILES += \
 #    gen_marker.py
+
+DISTFILES += \
+    accurate_aruco.py \
+    cu_matcher.cu \
+    CMakeLists.txt
