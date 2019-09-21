@@ -18,6 +18,13 @@ public:
     //!< Generate contours for templates.
     void run();
 
+public:
+    // Acces funcs for resulting arrays.
+    mapType * getSparseContours() { return mapContoursArr; }
+    float * getShiftsArr() { return shiftArr; }
+    float * getWArr() { return widthArr; }
+    float * getHArr() { return heightArr; }
+
 private:
     void EstimateShifts();
     void CreatContours();
