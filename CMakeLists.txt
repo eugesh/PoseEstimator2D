@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(2DSIM)
 
+SET(OpenCV_DIR /home/evgeny/soft/opencv/opencv/release)
+
 find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
@@ -29,6 +31,7 @@ cuda_add_library(2DSIM_kernels
 find_package(Qt5Widgets)
 if(Qt5Widgets_FOUND)
     set(CMAKE_AUTOMOC ON)
+    QT5_WRAP_UI(UISrcs ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui)
     #find_package(Qt5OpenGL REQUIRED)
     include_directories(${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})# ${Qt5OpenGL_INCLUDE_DIRS})
 
@@ -41,6 +44,7 @@ if(Qt5Widgets_FOUND)
         #opticalflowmatcher2d.cpp
         sim_2d.cpp
         main.cpp
+        ${UISrcs}
     )
 
     target_link_libraries(2DSIM 2DSIM_kernels Qt5::Widgets OpenCV_LIBS)# Qt5::OpenGL ${OPENGL_LIBRARIES} )

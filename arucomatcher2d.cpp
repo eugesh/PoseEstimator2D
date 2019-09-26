@@ -1,6 +1,11 @@
 #include "arucomatcher2d.h"
 #include "cv_math.hpp"
+#include "eh_math_qt.hpp"
 
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+//#include <cufft.h>
+#include <cuda.h>
 
 /*
  * SVEN web camera parameters.
@@ -68,4 +73,16 @@ ArucoMatcher2D::run() {
         image.copyTo(imageCopy);
     }
 
+}
+
+void
+ArucoMatcher2D::clearMemory() {
+    if(imgGPU!=nullptr) {
+       cudaFree(imgGPU     );
+       imgGPU=nullptr;
+    }
+    if(imgGPU_grad!=nullptr) {
+       cudaFree(imgGPU_grad);
+       imgGPU_grad=nullptr;
+    }
 }

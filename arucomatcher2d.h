@@ -6,9 +6,11 @@
 #include <opencv2/video/video.hpp>
 // #include <opencv2/video/videoio.hpp>
 #include <opencv2/opencv.hpp>
-#include <opencv2/aruco.hpp>
+//#include <opencv2/aruco.hpp>
+#include <opencv2/aruco.hpp> // /usr/local/include/opencv4/
 #include <QObject>
 
+typedef float IMGTYPE;
 
 class ArucoMatcher2D : public SIM_2D
 {
@@ -20,14 +22,26 @@ public:
     // To be possible to implement it with QThread.
     virtual void run();
 
+public slots:
+    void setFrame(cv::Mat frame) { m_currentFrame = frame; }
+
+signals:
+    void poseEstimated(QVector3D);
+    void quat_raw(cv::Mat);
+
 private:
     void init_contours();
     // x, y, phi relative to image SC.
     virtual QVector3D estimate_pose(cv::Mat frame);
+    void clearMemory();
+
 private:
     static const int def_dict = cv::aruco::DICT_7X7_50;
     cv::Ptr<cv::aruco::Dictionary> dictionary;
     constexpr static float Marker_size = 0.1f; // [m]
+    IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;
+    QVector3D m_lastPose;
+    cv::Mat m_currentFrame;
 };
 
 
