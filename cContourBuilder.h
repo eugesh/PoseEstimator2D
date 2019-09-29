@@ -7,7 +7,9 @@
 
 
 //!< typedef for tamplates' values type.
-typedef float MAPTYPE;
+typedef uint16_t MAPTYPE;
+typedef uint16_t UINT;
+
 
 class cContoursBuilderGPU
 {
@@ -21,9 +23,9 @@ public:
 public:
     // Acces funcs for resulting arrays.
     MAPTYPE * getSparseContours() { return mapContoursArr; }
-    float * getShiftsArr() { return shiftArr; }
-    float * getWArr() { return widthArr; }
-    float * getHArr() { return heightArr; }
+    UINT * getShiftsArr() { return shiftArr; }
+    UINT * getWArr() { return widthArr; }
+    UINT * getHArr() { return heightArr; }
 
 private:
     int EstimateShifts();
@@ -34,16 +36,17 @@ private:
     //!< Contours.
     MAPTYPE * mapContoursArr;
     //!< Array of contours' length.
-    float * shiftArr;
-    float * widthArr;
-    float * heightArr;
+    UINT * shiftArr;
+    UINT * widthArr;
+    UINT * heightArr;
     std::vector<int> m_targetValues;
     std::vector<int> m_bckgValues;
     std::vector<cv::Mat> m_templates_vec;
 private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
     MAPTYPE * mapGPU;
-    float * shiftGPU;
-    float * widthGPU;
-    float * heightGPU;
+    UINT * shiftGPU; // ToDo: Is 2^16 enough?
+    UINT * shiftGPU_sparse;
+    UINT * widthGPU;
+    UINT * heightGPU;
 };

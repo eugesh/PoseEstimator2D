@@ -11,34 +11,35 @@
 
 #define  KERNEL_LAUNCH 1
 #define IMGTYPE float //float or double (float ������� �� CUDA)//��� ������ �����������
-#define MAPTYPE int
+#define MAPTYPE uint16_t // int
 #define MATHTYPE float
 #define BLOCK_SIZE 512
+typedef uint16_t UINT;
 
 
-// User API functions.
-int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
-                                                     MAPTYPE*mapGPU,
-                                                     int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value);
-
-int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
-                                                     MAPTYPE*contourGPU, MAPTYPE*mapGPU,
-                                                     int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value);
-
-// Pure cu functions.
 #ifdef __cplusplus
 extern "C" {
 #endif
-__global__ void get_shift_to_create_contours(int*shiftAr_sparse, MAPTYPE*in,int*shiftAr,int*arW,int*arH,int useSh, int shadow_value) ;
-__global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, int*shiftAr_sparse, MAPTYPE*in, int*shiftAr,int*arW,int*arH,int useSh, int shadow_value) ;
+// User API functions.
+int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
+                                             MAPTYPE*mapGPU,
+                                             UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
+
+int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
+                                 MAPTYPE*contourGPU, MAPTYPE*mapGPU,
+                                 UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
+
+// Pure cu functions.
+__global__ void get_shift_to_create_contours(UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH,int useSh, int shadow_value) ;
+__global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH, int useSh, int shadow_value) ;
 #ifdef __cplusplus
 }
 #endif
 
 
 int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
-                                                     MAPTYPE*mapGPU,
-                                                     int*shiftGPU_sparse, int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value ) {
+                                             MAPTYPE*mapGPU,
+                                             UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value ) {
     dim3 dimGrid  ( NUM_BLOCK_X , NUM_BLOCK_Y  ) ;
     dim3 dimBlock ( NUM_THREAD_X, NUM_THREAD_Y ) ;
 
@@ -64,11 +65,11 @@ int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, i
        offset+=sizeof(int*);
     resSetupArg=cudaSetupArgument(&mapGPU, sizeof(MAPTYPE*),offset);
        offset+=sizeof(MAPTYPE*);
-    resSetupArg=cudaSetupArgument(&shiftGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&shiftGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
-    resSetupArg=cudaSetupArgument(&widthGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&widthGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
-    resSetupArg=cudaSetupArgument(&heightGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&heightGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
     resSetupArg=cudaSetupArgument(&use_shadow, sizeof(int*),offset);
        offset+=sizeof(int);
@@ -103,7 +104,7 @@ int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, i
 
 int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
                                                      MAPTYPE*contourGPU_sparse, MAPTYPE*mapGPU,
-                                                     int*shiftGPU_sparse, int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value )
+                                                     UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value )
 {
     dim3 dimGrid  ( NUM_BLOCK_X , NUM_BLOCK_Y  ) ;
     dim3 dimBlock ( NUM_THREAD_X, NUM_THREAD_Y ) ;
@@ -133,11 +134,11 @@ int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD
        offset+=sizeof(int*);
     resSetupArg=cudaSetupArgument(&mapGPU, sizeof(MAPTYPE*),offset);
        offset+=sizeof(MAPTYPE*);
-    resSetupArg=cudaSetupArgument(&shiftGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&shiftGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
-    resSetupArg=cudaSetupArgument(&widthGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&widthGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
-    resSetupArg=cudaSetupArgument(&heightGPU, sizeof(int*),offset);
+    resSetupArg=cudaSetupArgument(&heightGPU, sizeof(UINT*),offset);
        offset+=sizeof(int*);
     resSetupArg=cudaSetupArgument(&use_shadow, sizeof(int*),offset);
        offset+=sizeof(int);
@@ -175,7 +176,7 @@ int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD
     First pass. For defining and setting shift values.
     int*shiftAr_sparse - output array of shifts(each contour length)
 */
-__global__ void get_shift_to_create_contours(int*shiftAr_sparse, MAPTYPE*in,int*shiftAr,int*arW,int*arH,int useSh, int shadow_value) {
+__global__ void get_shift_to_create_contours(UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH, int useSh, int shadow_value) {
     //-- Block index 0 :2: 360*num_of_planes
     int by = blockIdx.y ;
     int i,j;
@@ -212,25 +213,25 @@ int num - the value for contour's elements. The rest of elements will have zero 
 int useSh - 0 or 1
 int shadow_value - value of shadow area in input map "in". Also output value for contour.
 */
-__global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, int*shiftAr_sparse, MAPTYPE*in, int*shiftAr,int*arW,int*arH,int useSh, int shadow_value) {
+__global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH, int useSh, int shadow_value) {
     //-- Block index 0 .. 360 map
     int by = blockIdx.y ;
     int i,j;
     MAPTYPE arg = 0;
     int count = 0;
     //lenght[by]=0;
-    for(i=0;i<arH[by];++i) {
-        for(j=0;j<arW[by];++j) {
+    for(i=0; i < arH[by]; ++i) {
+        for(j=0; j < arW[by]; ++j) {
             // out[shiftAr[by]+i*arW[by]+j]=0;
-            arg = in[shiftAr[by]+i*arW[by]+j];
-            if(arg!=0&&arg!=(!useSh)*shadow_value&&i!=0&&j!=0&&i!=arH[by]&&j!=arW[by])
-                if(((in[shiftAr[by]+i*arW[by]+j-1]!=arg)||
-                    (in[shiftAr[by]+i*arW[by]+j+1]!=arg)||
-                    (in[shiftAr[by]+(i+1)*arW[by]+j]!=arg)||
-                    (in[shiftAr[by]+(i-1)*arW[by]+j]!=arg))) {
-                        out_sparse[shiftAr_sparse[by]+count]=j;
-                        out_sparse[shiftAr_sparse[by]+count+1]=i;
-                        count+=2;
+            arg = in[shiftAr[by] + i * arW[by] + j];
+            if(arg != 0 && arg != (!useSh) * shadow_value && i != 0 && j != 0&&i != arH[by]&&j != arW[by])
+                if(((in[shiftAr[by] + i * arW[by] + j - 1] != arg) ||
+                    (in[shiftAr[by] + i * arW[by] + j + 1] != arg) ||
+                    (in[shiftAr[by] + (i + 1) * arW[by] + j] != arg) ||
+                    (in[shiftAr[by] + (i - 1) * arW[by] + j] != arg))) {
+                        out_sparse[shiftAr_sparse[by] + count] = j;
+                        out_sparse[shiftAr_sparse[by] + count + 1] = i;
+                        count += 2;
                         //lenght[by]++;
                 }
         }

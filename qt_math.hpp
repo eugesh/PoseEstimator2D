@@ -5,12 +5,6 @@
 #include <QMatrix4x4>
 #include <QImage>
 
-
-QTransform
-getAffineTransform (QVector3D R, QVector3D t) {
-    return getAffineTransform (R.x(), R.y(), R.z(), t.x(), t.y(), t.z());
-}
-
 QTransform
 getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float phi_z) {
     QMatrix4x4 matr;
@@ -23,15 +17,22 @@ getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float p
     return matr.toTransform();
 }
 
+QTransform
+getAffineTransform (QVector3D R, QVector3D t) {
+    return getAffineTransform (R.x(), R.y(), R.z(), t.x(), t.y(), t.z());
+}
+
 /**
  * @brief getTransformed
  * @param Apply transform to img itself.
  * @return
  */
-QImage
-getTransformed(QImage & img) {
-    QImage
-}
+/*QImage
+getTransformed(QImage & img, QVector3D R, QVector3D t) {
+    QTransform tf = getAffineTransform(R, t);
+
+     img.transformed();
+}*/
 
 /**
  * @brief ApplyTransform

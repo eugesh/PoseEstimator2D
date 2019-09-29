@@ -1,22 +1,26 @@
 #include "cContourBuilder.h"
+#include "CUDA_common.hpp"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 //#include <cufft.h>
 #include <cuda.h>
 
+
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
-                                                     MAPTYPE*mapGPU,
-                                                     int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value);
+                                             MAPTYPE*mapGPU,
+                                             UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
 
 int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
-                                                     MAPTYPE*contourGPU, MAPTYPE*mapGPU,
-                                                     int*shiftGPU, int*widthGPU, int*heightGPU, int use_shadow, int shadow_value);
-
+                                 MAPTYPE*contourGPU, MAPTYPE*mapGPU,
+                                 UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
+#ifdef __cplusplus
 }
-
+#endif
 
 /**
  * @brief cContourBuilder::cContourBuilder
@@ -38,22 +42,19 @@ cContoursBuilderGPU::run() {
 
 int
 cContoursBuilderGPU::EstimateShifts() {
-    int UseShadow=0;
-    int SHADOW_VALUE=1;
-    int Success=0;
+    int UseShadow = 0;
+    int SHADOW_VALUE = 1;
+    int Success = 0;
 
     { // Create contour
         int NUM_BLOCK_X = 1;// maxH;
         int NUM_BLOCK_Y = m_templates_vec.size(); // numPhi * num_plane;//numPhi;
-        int NUM_THREAD_X = 1;//maxW;//maxW*maxH;
+        int NUM_THREAD_X = 1; //maxW; //maxW*maxH;
         int NUM_THREAD_Y = 1;
-        //int error_create_contour = create_contour(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
-        //                                                                             contourGPU, mapGPU,
-        //                                                                         shiftGPU, widthGPU, heightGPU, UseShadow);
-        // get_shift_to_create_contour_combi_sparse();
-        int error_create_contour = create_contour_combi(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
-                                                                                     contourGPU, mapGPU,
-                                                                                     shiftGPU, widthGPU, heightGPU, UseShadow, SHADOW_VALUE);
+
+        int error_create_contour = get_shift_to_create_contour_combi_sparse(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
+                                                                             contourGPU,
+                                                                             shiftGPU_sparse, shiftGPU, widthGPU, heightGPU, UseShadow, SHADOW_VALUE);
 
         if( Success !=  error_create_contour )
         {
@@ -62,25 +63,30 @@ cContoursBuilderGPU::EstimateShifts() {
             clearMemory( );
 
             return ErrorCudaRun;
-        };
+        }
 
     }
+
+    return 0;
 }
 
 int
 cContoursBuilderGPU::CreateContours() {
-    int Success=0;
+    int UseShadow = 0;
+    int SHADOW_VALUE = 1;
+    int Success = 0;
+
     { // Create contour
         int NUM_BLOCK_X = 1;// maxH;
-        int NUM_BLOCK_Y = numPhi*num_plane;//numPhi;
+        int NUM_BLOCK_Y = m_templates_vec.size(); // numPhi*num_plane;//numPhi;
         int NUM_THREAD_X = 1;//maxW;//maxW*maxH;
         int NUM_THREAD_Y = 1;
         //int error_create_contour = create_contour(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
         //                                                                             contourGPU, mapGPU,
         //                                                                         shiftGPU, widthGPU, heightGPU, UseShadow);
-        int error_create_contour = create_contour_combi(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
-                                                                                     contourGPU, mapGPU,
-                                                                                     shiftGPU, widthGPU, heightGPU, UseShadow, SHADOW_VALUE);
+        int error_create_contour = create_contour_combi_sparse(NUM_BLOCK_X, NUM_BLOCK_Y, NUM_THREAD_X, NUM_THREAD_Y,
+                                                                 contourGPU, mapGPU,
+                                                                 shiftGPU_sparse, shiftGPU, widthGPU, heightGPU, UseShadow, SHADOW_VALUE);
 
         if( Success !=  error_create_contour )
         {
@@ -89,9 +95,11 @@ cContoursBuilderGPU::CreateContours() {
             clearMemory( );
 
             return ErrorCudaRun;
-        };
+        }
 
     }
+
+    return 0;
 }
 
 void cContoursBuilderGPU::clearMemory( ) {
@@ -133,7 +141,7 @@ void cContoursBuilderGPU::clearMemory( ) {
        cudaFree(shiftGPU   );
        shiftGPU=nullptr;
     }
-    if(tableGPU!=nullptr) {
+    /*if(tableGPU!=nullptr) {
        cudaFree(tableGPU   );
        tableGPU=nullptr;
     puts("CAccurateClassifier::clearMemory, tableGPU => memory has been cleared\n");
@@ -142,6 +150,6 @@ void cContoursBuilderGPU::clearMemory( ) {
     if(lenghtContourGPU!=nullptr) {
        cudaFree(lenghtContourGPU);
        lenghtContourGPU=nullptr;
-    }
+    }*/
     puts("CAccurateClassifier::clearMemory => memory has been cleared\n");
 }

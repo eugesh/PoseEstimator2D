@@ -1,11 +1,12 @@
 #include "arucomatcher2d.h"
 #include "cv_math.hpp"
-#include "eh_math_qt.hpp"
+#include "qt_math.hpp"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 //#include <cufft.h>
 #include <cuda.h>
+#include <math.h>
 
 /*
  * SVEN web camera parameters.

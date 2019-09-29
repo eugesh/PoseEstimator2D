@@ -8,11 +8,13 @@ find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
 
-#if(NOT OpenCV_FOUND)
-#    MESSAGE(FATAL_ERROR "OpenCV not found")
-#endif()
+if(NOT OpenCV_FOUND)
+    MESSAGE(FATAL_ERROR "OpenCV not found")
+endif()
 
-set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_videoio opencv_contrib opencv_calib3d opencv_features2d opencv_flann opencv_photo)
+set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_videoio opencv_calib3d opencv_features2d opencv_flann opencv_photo opencv_aruco) #opencv_contrib
+
+LINK_DIRECTORIES(/usr/local/lib/)
 
 if(CMAKE_VERSION VERSION_LESS "2.8.11")
     include_directories(${OpenCV_INCLUDE_DIRS})
@@ -47,6 +49,6 @@ if(Qt5Widgets_FOUND)
         ${UISrcs}
     )
 
-    target_link_libraries(2DSIM 2DSIM_kernels Qt5::Widgets OpenCV_LIBS)# Qt5::OpenGL ${OPENGL_LIBRARIES} )
+    target_link_libraries(2DSIM 2DSIM_kernels Qt5::Widgets ${OpenCV_LIBS} stdc++ m)# Qt5::OpenGL ${OPENGL_LIBRARIES} )
     set_target_properties(2DSIM PROPERTIES COMPILE_FLAGS "-std=c++11")
 endif(Qt5Widgets_FOUND)
