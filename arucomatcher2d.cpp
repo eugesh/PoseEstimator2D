@@ -1,6 +1,7 @@
 #include "arucomatcher2d.h"
 #include "cv_math.hpp"
 #include "qt_math.hpp"
+#include "cContourBuilder.h"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>

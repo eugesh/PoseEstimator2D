@@ -29,51 +29,72 @@ int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD
 cContoursBuilderGPU::cContoursBuilderGPU(std::vector<int> targetValues, std::vector<int> bckgValues)
  : m_targetValues(targetValues), m_bckgValues(bckgValues)
 {
-
+    shiftArr.push_back(0);
 }
 
 void
 cContoursBuilderGPU::clearAll() {
     m_templates_vec.clear();
 
-    if(mapContoursArr) {
-        delete [] mapContoursArr;
-        mapContoursArr=nullptr;
+    if(! mapContoursArr.empty()) {
+        mapContoursArr.clear();
+        // delete [] mapContoursArr;
+        // mapContoursArr=nullptr;
     }
 
-    if(widthArr) {
-        delete [] widthArr;
-        widthArr=nullptr;
+    if(! widthArr.empty()) {
+        widthArr.clear();
+        // delete [] widthArr;
+        // widthArr=nullptr;
     }
 
-    if(heightArr) {
-        delete [] heightArr;
-        heightArr=nullptr;
+    if(! heightArr.empty()) {
+        heightArr.clear();
+        // delete [] heightArr;
+        // heightArr=nullptr;
     }
 
-    if(shiftArr) {
-        delete [] shiftArr;
-        shiftArr=nullptr;
+    if(! shiftArr.empty()) {
+        shiftArr.clear();
+        // delete [] shiftArr;
+        // shiftArr=nullptr;
     }
 
     // free CUDA memroy
-    if(widthGPU) {
-       cudaFree(widthGPU);
+    if(mapGPU!=nullptr) {
+       cudaFree(mapGPU     );
+       mapGPU=nullptr;
+    }
+    if(contourGPU!=nullptr) {
+       cudaFree(contourGPU );
+       contourGPU=nullptr;
+    }
+    if(heightGPU!=nullptr) {
+       cudaFree(heightGPU  );
+       heightGPU=nullptr;
+    }
+    if(widthGPU!=nullptr) {
+       cudaFree(widthGPU   );
        widthGPU=nullptr;
     }
 
-    if(heightGPU) {
-       cudaFree(heightGPU);
-       heightGPU=nullptr;
+    if(shiftGPU!=nullptr) {
+       cudaFree(shiftGPU   );
+       shiftGPU=nullptr;
     }
 }
 
 void
 cContoursBuilderGPU::initAll() {
-    mapContoursArr=nullptr;
-    widthArr=nullptr;
-    heightArr=nullptr;
-    shiftArr=nullptr;
+    // mapContoursArr=nullptr;
+    // widthArr=nullptr;
+    // heightArr=nullptr;
+    // shiftArr=nullptr;
+
+    if(! shiftArr.empty())
+        shiftArr.clear();
+    shiftArr.push_back(0);
+
 
     mapGPU=nullptr;
     contourGPU=nullptr;
@@ -87,16 +108,19 @@ void
 cContoursBuilderGPU::setTemplates(std::vector<cv::Mat> templates_vec) {
     m_templates_vec = templates_vec;
 
-    shiftArr = new UINT[templates_vec.size()];
-    shiftArr[0] = 0;
-    for(int i=1; i < templates_vec.size(); ++i) {
-        shiftArr[i] = shiftArr[i-1] + templates_vec[i-1].cols * templates_vec[i-1].rows;
+    // shiftArr = new UINT[templates_vec.size()];
+    // shiftArr[0] = 0;
+    for(size_t i = 1; i < templates_vec.size(); ++i) {
+        shiftArr.push_back(shiftArr[i-1] + UINT(templates_vec[i-1].cols * templates_vec[i-1].rows));
     }
 }
 
 void
 cContoursBuilderGPU::append(cv::Mat img) {
-    assert(img.channels() == 1); m_templates_vec.push_back(img);
+    assert(img.channels() == 1);
+    m_templates_vec.push_back(img);
+    shiftArr.push_back(shiftArr[shiftArr.size()-1] + UINT(m_templates_vec[shiftArr.size()-1].cols * m_templates_vec[shiftArr.size()-1].rows));
+    // shiftArr.push_back(shiftArr[i-1] + UINT(templates_vec[i-1].cols * templates_vec[i-1].rows));
 }
 
 void
@@ -126,7 +150,7 @@ cContoursBuilderGPU::EstimateShifts() {
         {
             printf("Error:create_contour: cudaLaunch : Error message = %d\n", error_create_contour ) ;
 
-            clearMemory( );
+            clearAll( );
 
             return ErrorCudaRun;
         }
@@ -158,7 +182,7 @@ cContoursBuilderGPU::CreateContours() {
         {
             printf("Error:create_contour: cudaLaunch : Error message = %d\n", error_create_contour ) ;
 
-            clearMemory( );
+            clearAll( );
 
             return ErrorCudaRun;
         }
@@ -168,54 +192,3 @@ cContoursBuilderGPU::CreateContours() {
     return 0;
 }
 
-void cContoursBuilderGPU::clearMemory( ) {
-    if(mapContoursArr != nullptr) {
-       free( mapContoursArr );
-       mapContoursArr=nullptr;
-    }
-    if(widthArr!=nullptr) {
-       free( widthArr );
-       widthArr=nullptr;
-    }
-    if(heightArr!=nullptr) {
-       free( heightArr );
-       heightArr=nullptr;
-    }
-    if(shiftArr!=nullptr) {
-       free( shiftArr );
-       shiftArr=nullptr;
-    }
-
-    if(mapGPU!=nullptr) {
-       cudaFree(mapGPU     );
-       mapGPU=nullptr;
-    }
-    if(contourGPU!=nullptr) {
-       cudaFree(contourGPU );
-       contourGPU=nullptr;
-    }
-    if(heightGPU!=nullptr) {
-       cudaFree(heightGPU  );
-       heightGPU=nullptr;
-    }
-    if(widthGPU!=nullptr) {
-       cudaFree(widthGPU   );
-       widthGPU=nullptr;
-    }
-
-    if(shiftGPU!=nullptr) {
-       cudaFree(shiftGPU   );
-       shiftGPU=nullptr;
-    }
-    /*if(tableGPU!=nullptr) {
-       cudaFree(tableGPU   );
-       tableGPU=nullptr;
-    puts("CAccurateClassifier::clearMemory, tableGPU => memory has been cleared\n");
-    }
-
-    if(lenghtContourGPU!=nullptr) {
-       cudaFree(lenghtContourGPU);
-       lenghtContourGPU=nullptr;
-    }*/
-    puts("CAccurateClassifier::clearMemory => memory has been cleared\n");
-}

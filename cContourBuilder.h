@@ -9,7 +9,7 @@
 //!< typedef for tamplates' values type.
 typedef uint16_t MAPTYPE;
 typedef uint16_t UINT;
-
+#define Vector std::vector
 
 /**
  * @brief The cContoursBuilderGPU class
@@ -29,10 +29,10 @@ public:
 
 public:
     // Acces funcs for resulting arrays.
-    MAPTYPE * getSparseContours() { return mapContoursArr; }
-    UINT * getShiftsArr() { return shiftArr; }
-    UINT * getWArr() { return widthArr; }
-    UINT * getHArr() { return heightArr; }
+    MAPTYPE * getSparseContours() { return mapContoursArr.data(); }
+    UINT * getShiftsArr() { return shiftArr.data(); }
+    UINT * getWArr() { return widthArr.data(); }
+    UINT * getHArr() { return heightArr.data(); }
     MAPTYPE * getSparseContoursGPU() { return contourGPU; }
     UINT * getShiftsGPU() { return shiftGPU; }
     UINT * getSparceShiftsGPU() { return shiftGPU; }
@@ -46,15 +46,14 @@ private:
     int copyMemory2GPU();
     int EstimateShifts();
     int CreateContours();
-    void clearMemory();
 
 private:
     //!< Contours.
-    MAPTYPE * mapContoursArr;
+    Vector<MAPTYPE> mapContoursArr;
     //!< Array of contours' length.
-    UINT * shiftArr;
-    UINT * widthArr;
-    UINT * heightArr;
+    Vector<UINT> shiftArr;
+    Vector<UINT> widthArr;
+    Vector<UINT> heightArr;
     std::vector<int> m_targetValues;
     std::vector<int> m_bckgValues;
     std::vector<cv::Mat> m_templates_vec;
