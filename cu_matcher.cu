@@ -29,6 +29,8 @@ int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD
                                  MAPTYPE*contourGPU, MAPTYPE*mapGPU,
                                  UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
 
+// int applyAffineTransformations ();
+
 // Pure cu functions.
 __global__ void get_shift_to_create_contours(UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH,int useSh, int shadow_value) ;
 __global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, UINT*shiftAr_sparse, MAPTYPE*in, UINT*shiftAr, UINT*arW, UINT*arH, int useSh, int shadow_value) ;

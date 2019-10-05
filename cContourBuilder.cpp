@@ -32,6 +32,72 @@ cContoursBuilderGPU::cContoursBuilderGPU(std::vector<int> targetValues, std::vec
 
 }
 
+void
+cContoursBuilderGPU::clearAll() {
+    m_templates_vec.clear();
+
+    if(mapContoursArr) {
+        delete [] mapContoursArr;
+        mapContoursArr=nullptr;
+    }
+
+    if(widthArr) {
+        delete [] widthArr;
+        widthArr=nullptr;
+    }
+
+    if(heightArr) {
+        delete [] heightArr;
+        heightArr=nullptr;
+    }
+
+    if(shiftArr) {
+        delete [] shiftArr;
+        shiftArr=nullptr;
+    }
+
+    // free CUDA memroy
+    if(widthGPU) {
+       cudaFree(widthGPU);
+       widthGPU=nullptr;
+    }
+
+    if(heightGPU) {
+       cudaFree(heightGPU);
+       heightGPU=nullptr;
+    }
+}
+
+void
+cContoursBuilderGPU::initAll() {
+    mapContoursArr=nullptr;
+    widthArr=nullptr;
+    heightArr=nullptr;
+    shiftArr=nullptr;
+
+    mapGPU=nullptr;
+    contourGPU=nullptr;
+    shiftGPU=nullptr;
+    shiftGPU_sparse=nullptr;
+    widthGPU=nullptr;
+    heightGPU=nullptr;
+}
+
+void
+cContoursBuilderGPU::setTemplates(std::vector<cv::Mat> templates_vec) {
+    m_templates_vec = templates_vec;
+
+    shiftArr = new UINT[templates_vec.size()];
+    shiftArr[0] = 0;
+    for(int i=1; i < templates_vec.size(); ++i) {
+        shiftArr[i] = shiftArr[i-1] + templates_vec[i-1].cols * templates_vec[i-1].rows;
+    }
+}
+
+void
+cContoursBuilderGPU::append(cv::Mat img) {
+    assert(img.channels() == 1); m_templates_vec.push_back(img);
+}
 
 void
 cContoursBuilderGPU::run() {

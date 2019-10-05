@@ -11,12 +11,19 @@ typedef uint16_t MAPTYPE;
 typedef uint16_t UINT;
 
 
+/**
+ * @brief The cContoursBuilderGPU class
+ * ContoursBuilder class, builds contours from set of images.
+ *
+ * ToDo: implement another class, creating contours from one image on GPU applying affine transformations realtime before performing it's work.
+ */
 class cContoursBuilderGPU
 {
 public:
     cContoursBuilderGPU(std::vector<int> targetValues={1}, std::vector<int> bckgValues={0});
     //!< Set vector of binary(bw) templates' matrices.
-    void setTemplates(std::vector<cv::Mat> templates_vec) { m_templates_vec = templates_vec; }
+    void setTemplates(std::vector<cv::Mat> templates_vec) ;
+    void append(cv::Mat img) ;
     //!< Generate contours for templates.
     void run();
 
@@ -26,8 +33,17 @@ public:
     UINT * getShiftsArr() { return shiftArr; }
     UINT * getWArr() { return widthArr; }
     UINT * getHArr() { return heightArr; }
+    MAPTYPE * getSparseContoursGPU() { return contourGPU; }
+    UINT * getShiftsGPU() { return shiftGPU; }
+    UINT * getSparceShiftsGPU() { return shiftGPU; }
+    UINT * getWGPU() { return widthGPU; }
+    UINT * getHGPU() { return heightGPU; }
+    void clearAll();
 
 private:
+    void initAll();
+    int allocateMemoryGPU();
+    int copyMemory2GPU();
     int EstimateShifts();
     int CreateContours();
     void clearMemory();
