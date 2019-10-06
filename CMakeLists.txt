@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(2DSIM)
 
+# Set your filepath
 SET(OpenCV_DIR /home/evgeny/soft/opencv/opencv/release)
 
 find_package(PkgConfig)
@@ -30,6 +31,7 @@ cuda_add_library(2DSIM_kernels
 )
 
 # Qt based
+# Requires Qt 5.12
 find_package(Qt5Widgets)
 if(Qt5Widgets_FOUND)
     set(CMAKE_AUTOMOC ON)

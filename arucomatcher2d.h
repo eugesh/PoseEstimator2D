@@ -2,12 +2,15 @@
 #define ARUCOMATCHER2D_H
 
 #include "sim_2d.h"
-//#include "opencv2/opencv.hpp"
+#include "sim_2d_types.h"
+
 #include <opencv2/video/video.hpp>
 // #include <opencv2/video/videoio.hpp>
 #include <opencv2/opencv.hpp>
-//#include <opencv2/aruco.hpp>
 #include <opencv2/aruco.hpp> // /usr/local/include/opencv4/
+#include <opencv2/video.hpp>
+#include <opencv2/videoio.hpp>
+
 #include <QObject>
 
 typedef float IMGTYPE;
@@ -38,6 +41,9 @@ private:
 private:
     static const int def_dict = cv::aruco::DICT_7X7_50;
     cv::Ptr<cv::aruco::Dictionary> dictionary;
+    Vector<int> m_ids_vec;
+    UINT m_template_size;
+
     constexpr static float Marker_size = 0.1f; // [m]
     IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;
     QVector3D m_lastPose;

@@ -7,9 +7,7 @@
 
 
 //!< typedef for tamplates' values type.
-typedef uint16_t MAPTYPE;
-typedef uint16_t UINT;
-#define Vector std::vector
+#include "sim_2d_types.h"
 
 /**
  * @brief The cContoursBuilderGPU class

@@ -11,8 +11,8 @@ class SIM_2D : public QObject
 {
         Q_OBJECT
 public:
-    explicit SIM_2D(QObject * parent = nullptr) { ; }
-    virtual ~SIM_2D() { ; }
+    explicit SIM_2D(QObject * parent=nullptr) { }
+    virtual ~SIM_2D() { }
 
 signals:
     void quat_raw(cv::Mat quat); // Estimated pose (Aruco marker finder).
