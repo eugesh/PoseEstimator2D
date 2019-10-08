@@ -22,7 +22,7 @@ static const cv::Mat distortion_coeff = (cv::Mat_<double>(1,5) <<
 ArucoMatcher2D::ArucoMatcher2D(QObject *parent) : SIM_2D (parent)
 {
     dictionary = cv::aruco::getPredefinedDictionary(def_dict);
-    m_ids_vec.push_back(2);
+    m_ids_vec.push_back(0);
     m_template_size = templates_size;
     init_contours();
 }
@@ -41,10 +41,18 @@ ArucoMatcher2D::init_contours() {
     // CV_WRAP_AS(create) static Ptr<Dictionary> create(int nMarkers, int markerSize, int randomSeed=0);
     // dictionary->create(50, m_template_size);
     cv::Mat marker;
+    cv::aruco::drawMarker(dictionary, m_ids_vec.front(), m_template_size, marker);
+
+    // Transform Aruco marker: rotate +-5 degree in all dimensions.
+}
+
+void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
+    cv::Mat marker;
+
     for(int i=0; i < 50; ++i) {
-        cv::aruco::drawMarker(dictionary, i, m_template_size, marker);
+        cv::aruco::drawMarker(dictionary, i, template_size, marker);
         if(marker.cols > 0)
-            cv::imwrite(QString("aruco_DICT_7X7_50_id%1.png").arg(i).toUtf8().toStdString(), marker);
+            cv::imwrite(QString("%1_id%2.png").arg(name).arg(i).toUtf8().toStdString(), marker);
     }
     // cv::namedWindow ("marker", 1);
 

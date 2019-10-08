@@ -18,8 +18,8 @@ getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float p
 }
 
 QTransform
-getAffineTransform (QVector3D R, QVector3D t) {
-    return getAffineTransform (R.x(), R.y(), R.z(), t.x(), t.y(), t.z());
+getAffineTransform (QVector3D t, QVector3D R) {
+    return getAffineTransform (t.x(), t.y(), t.z(), R.x(), R.y(), R.z());
 }
 
 /**
@@ -40,10 +40,10 @@ getTransformed(QImage & img, QVector3D R, QVector3D t) {
  * @return
  */
 QImage
-ApplyTransform(QImage const& img, QVector3D R, QVector3D t) {
+ApplyTransform(QImage const& img, QVector3D t, QVector3D R) {
     QImage outImg(img);
 
-    QTransform tf = getAffineTransform(R, t);
+    QTransform tf = getAffineTransform(t, R);
 
     outImg.transformed(tf);
 
