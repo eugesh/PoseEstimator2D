@@ -10,8 +10,8 @@ getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float p
     QMatrix4x4 matr;
 
     matr.translate(x, y, z);
-    matr.rotate(phi_x, 1, 0);
-    matr.rotate(phi_y, 0, 1);
+    matr.rotate(phi_x, 1, 0, 0);
+    matr.rotate(phi_y, 0, 1, 0);
     matr.rotate(phi_z, 0, 0, 1);
 
     return matr.toTransform();
@@ -41,11 +41,11 @@ getTransformed(QImage & img, QVector3D R, QVector3D t) {
  */
 QImage
 ApplyTransform(QImage const& img, QVector3D t, QVector3D R) {
-    QImage outImg(img);
+    QImage outImg;
 
     QTransform tf = getAffineTransform(t, R);
 
-    outImg.transformed(tf);
+    outImg = img.transformed(tf);
 
     return outImg;
 }

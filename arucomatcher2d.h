@@ -5,7 +5,6 @@
 #include "sim_2d_types.h"
 
 #include <opencv2/video/video.hpp>
-// #include <opencv2/video/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp> // /usr/local/include/opencv4/
 #include <opencv2/video.hpp>

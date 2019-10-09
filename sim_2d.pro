@@ -77,6 +77,7 @@ SOURCES += \
     i_ContoursMatcher.cpp \
     mainwindow.cpp \
     #opticalflowmatcher2d.cpp
+    mat_qimage.cpp \
     sim_2d.cpp \
     main.cpp
 
@@ -87,6 +88,7 @@ HEADERS += \
     i_ContoursMatcher.h \
     mainwindow.h \
     #opticalflowmatcher2d.cpp
+    mat_qimage.hpp \
     sim_2d.h \
     ehmath.hpp \
     cv_math.hpp \

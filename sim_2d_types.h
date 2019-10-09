@@ -12,3 +12,7 @@ static const UINT templates_size=256;
 static const float PITCH_STEP=0.1f; // [degree]
 static const float ROLL_STEP=0.1f; // [degree]
 static const float YAW_STEP=0.1f; // [degree]
+
+static const float PITCH_MAX=5.0f; // [degree]
+static const float ROLL_MAX=5.0f; // [degree]
+static const float YAW_MAX=5.0f; // [degree]

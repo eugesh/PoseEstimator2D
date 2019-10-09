@@ -2,6 +2,7 @@
 #include "cv_math.hpp"
 #include "qt_math.hpp"
 #include "cContourBuilder.h"
+#include "mat_qimage.hpp"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -43,7 +44,20 @@ ArucoMatcher2D::init_contours() {
     cv::Mat marker;
     cv::aruco::drawMarker(dictionary, m_ids_vec.front(), m_template_size, marker);
 
+    // Convert cv::Mat to QImage
+    QImage q_marker_in, q_marker_tr;
+    q_marker_in = ocv::qt::mat_to_qimage_cpy(marker);
+
+    q_marker_in.save("qimage_marker.png");
+
     // Transform Aruco marker: rotate +-5 degree in all dimensions.
+    for(float pitch = -PITCH_MAX; pitch < PITCH_MAX; pitch += PITCH_STEP) {
+        for(float roll = -ROLL_MAX; roll < ROLL_MAX; roll += ROLL_STEP) {
+            for(float yaw = - YAW_MAX; yaw < YAW_MAX; yaw += YAW_STEP) {
+                q_marker_tr = ApplyTransform(q_marker_in, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
+            }
+        }
+    }
 }
 
 void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
