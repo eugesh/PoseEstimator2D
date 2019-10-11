@@ -46,9 +46,11 @@ ArucoMatcher2D::init_contours() {
 
     // Convert cv::Mat to QImage
     QImage q_marker_in, q_marker_tr;
-    q_marker_in = ocv::qt::mat_to_qimage_cpy(marker);
+    q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
 
     q_marker_in.save("qimage_marker.png");
+
+    q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied);
 
     // Transform Aruco marker: rotate +-5 degree in all dimensions.
     for(float pitch = -PITCH_MAX; pitch < PITCH_MAX; pitch += PITCH_STEP) {

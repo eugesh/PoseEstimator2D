@@ -11,7 +11,7 @@ class SIM_2D : public QObject
 {
         Q_OBJECT
 public:
-    explicit SIM_2D(QObject * parent=nullptr) { }
+    explicit SIM_2D(QObject * parent=nullptr) { Q_UNUSED(parent) }
     virtual ~SIM_2D() { }
 
 signals:
