@@ -57,6 +57,10 @@ ArucoMatcher2D::init_contours() {
         for(float roll = -ROLL_MAX; roll < ROLL_MAX; roll += ROLL_STEP) {
             for(float yaw = - YAW_MAX; yaw < YAW_MAX; yaw += YAW_STEP) {
                 q_marker_tr = ApplyTransform(q_marker_in, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
+                cbg.append(q_marker_tr);
+
+                if(debug)
+                    q_marker_tr.save(QString("./tr/tr_%1_%2_%3.png").arg(int(pitch*10)).arg(int(roll*10)).arg(int(yaw*10)));
             }
         }
     }

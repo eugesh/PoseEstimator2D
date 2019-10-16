@@ -4,10 +4,13 @@
 #include <opencv2/video.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
-
+#include <QString>
 
 //!< typedef for tamplates' values type.
 #include "sim_2d_types.h"
+
+class QImage;
+
 
 /**
  * @brief The cContoursBuilderGPU class
@@ -21,9 +24,12 @@ public:
     cContoursBuilderGPU(std::vector<int> targetValues={1}, std::vector<int> bckgValues={0});
     //!< Set vector of binary(bw) templates' matrices.
     void setTemplates(std::vector<cv::Mat> templates_vec) ;
-    void append(cv::Mat img) ;
+    void append(cv::Mat img);
+    void append(QImage const& img);
     //!< Generate contours for templates.
     void run();
+    //!< Call This function if you know number of tamplates in advance. It speeds up memory allocation for internal buffers doing it only once.
+    void setNumOfTemplates(int N);
 
 public:
     // Acces funcs for resulting arrays.
@@ -37,24 +43,30 @@ public:
     UINT * getWGPU() { return widthGPU; }
     UINT * getHGPU() { return heightGPU; }
     void clearAll();
+    // Debug.
+    bool validateBuildContours(QString path="");
 
 private:
     void initAll();
     int allocateMemoryGPU();
     int copyMemory2GPU();
     int EstimateShifts();
+    int EstimateShift4Template(cv::Mat img);
     int CreateContours();
+    int CreateContour4Template();
 
 private:
     //!< Contours.
     Vector<MAPTYPE> mapContoursArr;
+    Vector<SparseContour> sparseContoursVec;
     //!< Array of contours' length.
     Vector<UINT> shiftArr;
     Vector<UINT> widthArr;
     Vector<UINT> heightArr;
-    std::vector<int> m_targetValues;
-    std::vector<int> m_bckgValues;
-    std::vector<cv::Mat> m_templates_vec;
+    Vector<int> m_targetValues;
+    Vector<int> m_bckgValues;
+    Vector<cv::Mat> m_templates_vec;
+
 private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
     MAPTYPE * mapGPU;
