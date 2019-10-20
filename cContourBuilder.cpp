@@ -236,6 +236,11 @@ cContoursBuilderGPU::append(QImage const& img) {
     widthArr.push_back(UINT(img.width()));
     heightArr.push_back(UINT(img.height()));
     sparseContoursVec.push_back(contour);
+
+    QImage img_tmp = contour2Qimage(contour, widthArr.back(), heightArr.back());
+
+    img_tmp.save("img_tmp.png");
+    img_tmp.save(QString("./contours/c_%1_%2_%3.png").arg(int(sparseContoursVec.back()[0]*10)).arg(int(sparseContoursVec.back()[1]*10)).arg(int(sparseContoursVec.back()[2]*10)));
 }
 
 /*void
@@ -365,11 +370,37 @@ cContoursBuilderGPU::CreateContours() {
     return 0;
 }
 
+QImage
+cContoursBuilderGPU::contour2Qimage(SparseContour sparse_contour, int w, int h) {
+    if(!w || !h || !sparse_contour.size())
+        return QImage();
+
+    QImage img ( QSize(w, h), QImage::Format_Indexed8 ) ;
+    // QVector < QRgb > color_table ;
+    // for( int k = 0 ; k <= 1 ; k++ ) color_table << qRgb( k, k, k ) ;
+    // img.setColorTable( color_table ) ;
+    for(int l = 0; l < 256; ++l)
+        img.setColor( l, QColor(l,l,l).rgb( ) ) ;
+    img.fill(Qt::black) ;
+
+
+    for (size_t i=0; i < sparse_contour.size(); ++i) {
+        UINT x = sparse_contour[i] % UINT(w);
+        UINT y = sparse_contour[i] / UINT(w);
+
+        img.setPixel(QPoint(x,y), 255);
+    }
+
+    return img;
+}
+
 bool
-validateBuildContours(QString path="") {
+cContoursBuilderGPU::validateBuildContours(QString path) {
     bool rez = false;
 
+    for (int i=0; i < sparseContoursVec.size(); ++i) {
 
+    }
 
     return rez;
 }

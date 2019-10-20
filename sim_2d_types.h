@@ -13,7 +13,7 @@ typedef float REAL;
 typedef std::vector<QPoint> Contour;
 typedef std::vector<UINT> SparseContour;
 
-static const UINT templates_size=64;
+static const UINT templates_size=32;
 static const float PITCH_STEP=0.5f; // [degree]
 static const float ROLL_STEP=0.5f; // [degree]
 static const float YAW_STEP=0.5f; // [degree]

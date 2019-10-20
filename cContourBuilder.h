@@ -45,6 +45,7 @@ public:
     void clearAll();
     // Debug.
     bool validateBuildContours(QString path="");
+    static QImage contour2Qimage(SparseContour sparse_contour, int w, int h);
 
 private:
     void initAll();
