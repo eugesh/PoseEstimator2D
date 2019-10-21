@@ -237,10 +237,11 @@ cContoursBuilderGPU::append(QImage const& img) {
     heightArr.push_back(UINT(img.height()));
     sparseContoursVec.push_back(contour);
 
-    QImage img_tmp = contour2Qimage(contour, widthArr.back(), heightArr.back());
+    if(debug) {
+        QImage img_tmp = contour2Qimage(contour, widthArr.back(), heightArr.back());
 
-    img_tmp.save("img_tmp.png");
-    img_tmp.save(QString("./contours/c_%1_%2_%3.png").arg(int(sparseContoursVec.back()[0]*10)).arg(int(sparseContoursVec.back()[1]*10)).arg(int(sparseContoursVec.back()[2]*10)));
+        img_tmp.save(QString("./contours/c_%1_%2_%3.png").arg(int(sparseContoursVec.back()[0]*10)).arg(int(sparseContoursVec.back()[1]*10)).arg(int(sparseContoursVec.back()[2]*10)));
+    }
 }
 
 /*void
