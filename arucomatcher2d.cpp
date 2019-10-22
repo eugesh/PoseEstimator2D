@@ -48,8 +48,6 @@ ArucoMatcher2D::init_contours() {
     QImage q_marker_in, q_marker_tr;
     q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
 
-    q_marker_in.save("qimage_marker.png");
-
     q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied);
 
     // Transform Aruco marker: rotate +-5 degree in all dimensions.
@@ -85,6 +83,7 @@ void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size
 }
 
 // x, y, phi relative to image SC.
+// Rough estimation by standard library (Aruco lib).
 QVector3D
 ArucoMatcher2D::estimate_pose(cv::Mat frame) {
     QVector3D result;
@@ -121,9 +120,24 @@ ArucoMatcher2D::run() {
     while (inputVideo.grab()) {
         cv::Mat image, imageCopy, EulerAngles;
         std::vector<cv::Vec3d> rvecs, tvecs;
+        QImage qImageCopy, qImageCopy_pl_rough;
 
         inputVideo.retrieve(image);
         image.copyTo(imageCopy);
+
+        // Estimate pose with Aruco lib.
+        QVector3D rough_pose3D = estimate_pose(imageCopy);
+        qImageCopy = ocv::qt::mat_to_qimage_cpy(imageCopy, false);
+
+        // Transform image: rotate with estimated by Aruco lib quaternion.
+        qImageCopy_pl_rough = ApplyTransform(qImageCopy, QVector3D(0,0,0), rough_pose3D);
+
+        // Apply sobel filter -> gradient.
+        // qImageCopy_pl_rough
+        // Run Accurate matcher -> estimate delta rotation shift.
+
+        // Draw marker: compare Aruco and Accurate matcher results.
+
     }
 
 }
