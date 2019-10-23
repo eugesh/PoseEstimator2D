@@ -156,8 +156,8 @@ cContoursBuilderGPU::clearAll() {
         // heightArr=nullptr;
     }
 
-    if(! shiftArr.empty()) {
-        shiftArr.clear();
+    if(! sparseShiftArr.empty()) {
+        sparseShiftArr.clear();
         // delete [] shiftArr;
         // shiftArr=nullptr;
     }
@@ -193,9 +193,9 @@ cContoursBuilderGPU::initAll() {
     // heightArr=nullptr;
     // shiftArr=nullptr;
 
-    if(! shiftArr.empty())
-        shiftArr.clear();
-    shiftArr.push_back(0);
+    if(! sparseShiftArr.empty())
+        sparseShiftArr.clear();
+    sparseShiftArr.push_back(0);
 
 
     mapGPU=nullptr;
@@ -213,7 +213,7 @@ cContoursBuilderGPU::setTemplates(std::vector<cv::Mat> templates_vec) {
     // shiftArr = new UINT[templates_vec.size()];
     // shiftArr[0] = 0;
     for(size_t i = 1; i < templates_vec.size(); ++i) {
-        shiftArr.push_back(shiftArr[i-1] + UINT(templates_vec[i-1].cols * templates_vec[i-1].rows));
+        sparseShiftArr.push_back(sparseShiftArr[i-1] + UINT(templates_vec[i-1].cols * templates_vec[i-1].rows));
     }
 }
 
@@ -227,10 +227,10 @@ cContoursBuilderGPU::append(QImage const& img) {
     get_shift_and_create_contour(img_ar.getArray(), UINT(img.width()), UINT(img.height()), false, 0, sparse_shift);
 
     // Append shift, w, h;
-    if(shiftArr.size()) {
-        shiftArr.push_back(shiftArr.back() + sparse_shift);
+    if(sparseShiftArr.size()) {
+        sparseShiftArr.push_back(sparseShiftArr.back() + sparse_shift);
     } else {
-        shiftArr.push_back(sparse_shift);
+        sparseShiftArr.push_back(sparse_shift);
     }
 
     widthArr.push_back(UINT(img.width()));
@@ -267,10 +267,10 @@ cContoursBuilderGPU::append(cv::Mat img) {
     get_shift_and_create_contour(img_ar.getArray(), UINT(img.cols), UINT(img.rows), false, 0, sparse_shift);
 
     // Append shift, w, h;
-    if(shiftArr.size()) {
-        shiftArr.push_back(shiftArr.back() + sparse_shift);
+    if(sparseShiftArr.size()) {
+        sparseShiftArr.push_back(sparseShiftArr.back() + sparse_shift);
     } else {
-        shiftArr.push_back(sparse_shift);
+        sparseShiftArr.push_back(sparse_shift);
     }
 
     widthArr.push_back(UINT(img.cols));
@@ -404,4 +404,56 @@ cContoursBuilderGPU::validateBuildContours(QString path) {
     }
 
     return rez;
+}
+
+/**
+ * @brief cContoursBuilderGPU::contoursSetup
+ * Call it when all contours were appended.
+ */
+void
+cContoursBuilderGPU::contoursSetup() {
+    prepareMemoryCPU();
+    allocateMemoryGPU();
+    copyMemory2GPU();
+}
+
+int
+cContoursBuilderGPU::prepareMemoryCPU() {
+    contoursCPU_sparseArr = static_cast<UINT*> (malloc(sizeof (UINT) * (sparseShiftArr.back() + sparseContoursVec.back().size())));
+
+    for(size_t i = 0; i < sparseContoursVec.size(); ++i) {
+        UINT shift = 0;
+        if(i > 0) {
+            shift = sparseShiftArr[i-1];
+        }
+        memcpy(&contoursCPU_sparseArr[shift], sparseContoursVec[i].data(), sizeof(UINT) * sparseContoursVec[i].size());
+    }
+
+    return 0;
+}
+
+int
+cContoursBuilderGPU::allocateMemoryGPU() {
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&widthGPU), sizeof(UINT) * widthArr.size());
+
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&heightGPU), sizeof(UINT) * heightArr.size());
+
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&shiftGPU_sparse), sizeof(UINT) * (sparseShiftArr.size()));
+
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&contourGPU), sizeof(MAPTYPE) * (sparseShiftArr.back() + sparseContoursVec.back().size()));
+
+    return 0;
+}
+
+int
+cContoursBuilderGPU::copyMemory2GPU() {
+    cudaError_t mem2d = cudaMemcpy(widthGPU, widthArr.data(), sizeof(UINT) * widthArr.size(), cudaMemcpyHostToDevice);
+
+    mem2d = cudaMemcpy(heightGPU, heightArr.data(), sizeof(UINT) * heightArr.size(), cudaMemcpyHostToDevice);
+
+    mem2d = cudaMemcpy(shiftGPU_sparse, sparseShiftArr.data(), sizeof(UINT) * sparseShiftArr.size(), cudaMemcpyHostToDevice);
+
+    mem2d = cudaMemcpy(contourGPU, contoursCPU_sparseArr, sizeof(MAPTYPE) * (sparseShiftArr.back() + sparseContoursVec.back().size()), cudaMemcpyHostToDevice);
+
+    return 0;
 }

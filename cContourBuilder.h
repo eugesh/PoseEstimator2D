@@ -34,7 +34,7 @@ public:
 public:
     // Acces funcs for resulting arrays.
     MAPTYPE * getSparseContours() { return mapContoursArr.data(); }
-    UINT * getShiftsArr() { return shiftArr.data(); }
+    UINT * getShiftsArr() { return sparseShiftArr.data(); }
     UINT * getWArr() { return widthArr.data(); }
     UINT * getHArr() { return heightArr.data(); }
     MAPTYPE * getSparseContoursGPU() { return contourGPU; }
@@ -49,6 +49,9 @@ public:
 
 private:
     void initAll();
+    // Call it after all contours creation and when all of them appended by #append(QImage const& img) or #append(cv::Mat img).
+    void contoursSetup();
+    int prepareMemoryCPU();
     int allocateMemoryGPU();
     int copyMemory2GPU();
     int EstimateShifts();
@@ -61,12 +64,13 @@ private:
     Vector<MAPTYPE> mapContoursArr;
     Vector<SparseContour> sparseContoursVec;
     //!< Array of contours' length.
-    Vector<UINT> shiftArr;
+    Vector<UINT> sparseShiftArr;
     Vector<UINT> widthArr;
     Vector<UINT> heightArr;
     Vector<int> m_targetValues;
     Vector<int> m_bckgValues;
     Vector<cv::Mat> m_templates_vec;
+    UINT * contoursCPU_sparseArr;
 
 private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
