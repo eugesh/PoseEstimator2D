@@ -3,6 +3,7 @@
 
 #include "sim_2d.h"
 #include "sim_2d_types.h"
+#include "cContourBuilder.h"
 
 #include <opencv2/video/video.hpp>
 #include <opencv2/opencv.hpp>
@@ -47,6 +48,7 @@ private:
     IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;
     QVector3D m_lastPose;
     cv::Mat m_currentFrame;
+    cContoursBuilderGPU m_cbg;
 };
 
 

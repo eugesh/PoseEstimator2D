@@ -46,11 +46,11 @@ public:
     // Debug.
     bool validateBuildContours(QString path="");
     static QImage contour2Qimage(SparseContour sparse_contour, int w, int h);
+    // Call it after all contours creation and when all of them appended by #append(QImage const& img) or #append(cv::Mat img).
+    void contoursSetup();
 
 private:
     void initAll();
-    // Call it after all contours creation and when all of them appended by #append(QImage const& img) or #append(cv::Mat img).
-    void contoursSetup();
     int prepareMemoryCPU();
     int allocateMemoryGPU();
     int copyMemory2GPU();

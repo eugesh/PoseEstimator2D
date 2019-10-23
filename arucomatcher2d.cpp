@@ -26,6 +26,7 @@ ArucoMatcher2D::ArucoMatcher2D(QObject *parent) : SIM_2D (parent)
     m_ids_vec.push_back(0);
     m_template_size = templates_size;
     init_contours();
+    m_cbg.contoursSetup();
 }
 
 ArucoMatcher2D::~ArucoMatcher2D() {
@@ -35,7 +36,6 @@ ArucoMatcher2D::~ArucoMatcher2D() {
 void
 ArucoMatcher2D::init_contours() {
     // Create set of contours for the found marker.
-    cContoursBuilderGPU cbg;
 
     // Get Aruco marker.
     // CV_EXPORTS_W void drawMarker(const Ptr<Dictionary> &dictionary, int id, int sidePixels, OutputArray img, int borderBits = 1);
@@ -55,7 +55,7 @@ ArucoMatcher2D::init_contours() {
         for(float roll = -ROLL_MAX; roll < ROLL_MAX; roll += ROLL_STEP) {
             for(float yaw = - YAW_MAX; yaw < YAW_MAX; yaw += YAW_STEP) {
                 q_marker_tr = ApplyTransform(q_marker_in, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
-                cbg.append(q_marker_tr);
+                m_cbg.append(q_marker_tr);
 
                 if(debug)
                     q_marker_tr.save(QString("./tr/tr_%1_%2_%3.png").arg(int(pitch*10)).arg(int(roll*10)).arg(int(yaw*10)));

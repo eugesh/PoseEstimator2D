@@ -5,8 +5,8 @@
 #include <QPoint>
 
 
-typedef uint16_t MAPTYPE;
-typedef uint16_t UINT;
+typedef int MAPTYPE;
+typedef int UINT;
 typedef float REAL;
 #define Vector std::vector
 #define Vector std::vector
