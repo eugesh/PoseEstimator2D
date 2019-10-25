@@ -84,6 +84,7 @@ SOURCES += \
 HEADERS += \
     arucomatcher2d.h \
     cContourBuilder.h \
+    camera_param.hpp \
     cudaWrapper.h \
     i_ContoursMatcher.h \
     mainwindow.h \

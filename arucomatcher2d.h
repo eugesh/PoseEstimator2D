@@ -4,6 +4,7 @@
 #include "sim_2d.h"
 #include "sim_2d_types.h"
 #include "cContourBuilder.h"
+#include "camera_param.hpp"
 
 #include <opencv2/video/video.hpp>
 #include <opencv2/opencv.hpp>

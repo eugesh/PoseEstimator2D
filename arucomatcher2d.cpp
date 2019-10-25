@@ -93,12 +93,20 @@ ArucoMatcher2D::estimate_pose(cv::Mat frame) {
     std::vector<std::vector<cv::Point2f>> corners;
     std::vector<cv::Vec3d> rvecs, tvecs;
     cv::aruco::detectMarkers(frame, dictionary, corners, ids);
+    if(ids.empty())
+        return QVector3D();
+
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
     cv::Mat rot_matrix;
     cv::Rodrigues(rvecs, rot_matrix);
     cv::Mat quat = mRot2Quat(rot_matrix);
     emit quat_raw(quat);
+
+    // Draw markers.
+    for(size_t i=0; i < ids.size(); i++)
+        cv::aruco::drawAxis(frame, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
+
     // Gradient of the frame.
     // cv::Mat frame_grad = grad(frame); // ToDO
     // Get set of contours for the found marker (near to found angles).
@@ -137,9 +145,11 @@ ArucoMatcher2D::run() {
         // Run Accurate matcher -> estimate delta rotation shift.
 
         // Draw marker: compare Aruco and Accurate matcher results.
-
+        cv::imshow("frame", image);
+        char key = char(cv::waitKey(3));
+        if(key == 27)
+            return;
     }
-
 }
 
 void
@@ -152,4 +162,10 @@ ArucoMatcher2D::clearMemory() {
        cudaFree(imgGPU_grad);
        imgGPU_grad=nullptr;
     }
+}
+
+void
+draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, std::vector<cv::Vec3d> tvecs) {
+    for(size_t i=0; i < ids.size(); i++)
+        cv::aruco::drawAxis(image, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
 }
