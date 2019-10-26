@@ -20,7 +20,7 @@ signals:
 
 public:
     // x, y, phi relative to image SC.
-    virtual QVector3D estimate_pose(cv::Mat frame)=0;
+    virtual bool estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame)=0;
     // To be possible to implement it with QThread.
     virtual void run()=0;
 };

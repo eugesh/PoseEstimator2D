@@ -71,9 +71,11 @@ INCLUDEPATH += /usr/local/cuda/include
 ### CUDA end ###
 
 SOURCES += \
-    arucomatcher2d.cpp \
+    cAccurateMatcherGPU.cpp \
+    cArucoMatcher2d.cpp \
     cContourBuilder.cpp \
     cudaWrapper.cpp \
+    iAccurateMatcher.cpp \
     i_ContoursMatcher.cpp \
     mainwindow.cpp \
     #opticalflowmatcher2d.cpp
@@ -82,10 +84,12 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
-    arucomatcher2d.h \
+    cAccurateMatcherGPU.h \
+    cArucoMatcher2d.h \
     cContourBuilder.h \
     camera_param.hpp \
     cudaWrapper.h \
+    iAccurateMatcher.h \
     i_ContoursMatcher.h \
     mainwindow.h \
     #opticalflowmatcher2d.cpp

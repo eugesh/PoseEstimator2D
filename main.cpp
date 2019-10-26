@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "sim_2d.h"
-#include "arucomatcher2d.h"
+#include "cArucoMatcher2d.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
