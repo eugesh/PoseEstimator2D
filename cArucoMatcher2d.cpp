@@ -1,8 +1,9 @@
-#include "arucomatcher2d.h"
+#include "cArucoMatcher2d.h"
 #include "cv_math.hpp"
 #include "qt_math.hpp"
 #include "cContourBuilder.h"
 #include "mat_qimage.hpp"
+#include "img_func.h"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -84,17 +85,14 @@ void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size
 
 // x, y, phi relative to image SC.
 // Rough estimation by standard library (Aruco lib).
-QVector3D
-ArucoMatcher2D::estimate_pose(cv::Mat frame) {
-    QVector3D result;
-
+bool
+ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame) {
     // Find Aruco marker on image;
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> corners;
-    std::vector<cv::Vec3d> rvecs, tvecs;
     cv::aruco::detectMarkers(frame, dictionary, corners, ids);
     if(ids.empty())
-        return QVector3D();
+        return false;
 
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
@@ -116,7 +114,15 @@ ArucoMatcher2D::estimate_pose(cv::Mat frame) {
 
     // Find maximum.
 
-    return result;
+    return true;
+}
+
+bool
+ArucoMatcher2D::estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame) {
+
+
+
+    return true;
 }
 
 // To be possible to implement it with QThread.
@@ -134,14 +140,18 @@ ArucoMatcher2D::run() {
         image.copyTo(imageCopy);
 
         // Estimate pose with Aruco lib.
-        QVector3D rough_pose3D = estimate_pose(imageCopy);
+        if(! estimate_pose(rvecs, tvecs, imageCopy)) continue;
+
         qImageCopy = ocv::qt::mat_to_qimage_cpy(imageCopy, false);
 
         // Transform image: rotate with estimated by Aruco lib quaternion.
+        QVector3D rough_pose3D;
         qImageCopy_pl_rough = ApplyTransform(qImageCopy, QVector3D(0,0,0), rough_pose3D);
 
         // Apply sobel filter -> gradient.
-        // qImageCopy_pl_rough
+        ImgArray img_ar(qImageCopy_pl_rough), img_ar_grad(qImageCopy_pl_rough);
+        create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
         // Run Accurate matcher -> estimate delta rotation shift.
 
         // Draw marker: compare Aruco and Accurate matcher results.

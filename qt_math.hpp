@@ -5,6 +5,36 @@
 #include <QMatrix4x4>
 #include <QImage>
 
+/**
+ * Sobel operator, gradient.
+ */
+template <typename T>
+void create_matr_gradXY(T*out, int W, int H, T*in) {
+
+    for(int i=1; i < H - 1; ++i) {
+      for(int j=1; j < W - 1; ++j) {
+         out[i * W + j] = fabs(float(-in[(i-1) * W + j - 1] + in[(i-1) * W + j + 1] -
+                            2 * in[i * W + j - 1] + 2 * in[i * W + j + 1] - in[(i+1) * W + j - 1] + in[(i+1) * W + j + 1])) +
+                         fabs(float(in[(i-1) * W + j - 1] + 2 * in[(i-1) * W + j] + in[(i-1) * W + j + 1] -
+                            in[(i+1) * W + j - 1] - 2 * in[(i+1) * W + j] - in[(i+1) * W + j + 1]));
+      }
+    }
+}
+
+QImage sobel(QImage const& img) {
+    QImage grad;
+
+
+
+    for(int i=0; i < img.height(); ++i) {
+        for(int j=0; j < img.width(); ++j) {
+
+        }
+    }
+
+    return grad;
+}
+
 QTransform
 getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float phi_z) {
     QMatrix4x4 matr;

@@ -5,6 +5,7 @@
 #include "sim_2d_types.h"
 #include "cContourBuilder.h"
 #include "camera_param.hpp"
+#include "cAccurateMatcherGPU.h"
 
 #include <opencv2/video/video.hpp>
 #include <opencv2/opencv.hpp>
@@ -25,6 +26,7 @@ public:
 
     // To be possible to implement it with QThread.
     virtual void run();
+    bool estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame);
 
 public slots:
     void setFrame(cv::Mat frame) { m_currentFrame = frame; }
@@ -36,7 +38,7 @@ signals:
 private:
     void init_contours();
     // x, y, phi relative to image SC.
-    virtual QVector3D estimate_pose(cv::Mat frame);
+    bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame);
     void clearMemory();
 
 private:
@@ -50,6 +52,7 @@ private:
     QVector3D m_lastPose;
     cv::Mat m_currentFrame;
     cContoursBuilderGPU m_cbg;
+    cAccurateMatcherGPU m_accMatcher;
 };
 
 
