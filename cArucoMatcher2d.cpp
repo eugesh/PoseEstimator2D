@@ -14,12 +14,12 @@
 /*
  * SVEN web camera parameters.
  */
-static const cv::Mat intrinsic_matrix = (cv::Mat_<double>(3,3) << 1.1327961595847169e+03, 0.0000000000000000e+00, 3.2525414402158128e+02,
+/*static const cv::Mat intrinsic_matrix = (cv::Mat_<double>(3,3) << 1.1327961595847169e+03, 0.0000000000000000e+00, 3.2525414402158128e+02,
                                                                   0.0000000000000000e+00, 1.1475162233789308e+03, 1.3878903347777373e+02,
                                                                   0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00);
 
 static const cv::Mat distortion_coeff = (cv::Mat_<double>(1,5) <<
-              -2.3347424588689411e-01, 1.7924637678196107e+00, -1.8478504713094826e-02, -3.5034777946027344e-03, -6.9593099179000903e+00);
+              -2.3347424588689411e-01, 1.7924637678196107e+00, -1.8478504713094826e-02, -3.5034777946027344e-03, -6.9593099179000903e+00);*/
 
 ArucoMatcher2D::ArucoMatcher2D(QObject *parent) : SIM_2D (parent)
 {
@@ -50,6 +50,9 @@ ArucoMatcher2D::init_contours() {
     q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
 
     q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied);
+
+    m_cbg.clearAll();
+    m_cbg.initAll();
 
     // Transform Aruco marker: rotate +-5 degree in all dimensions.
     for(float pitch = -PITCH_MAX; pitch < PITCH_MAX; pitch += PITCH_STEP) {

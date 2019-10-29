@@ -94,20 +94,19 @@ Contour create_contour_map_combi_sparse(T*in, UINT shift, UINT W, UINT H, int us
  *
  * param[out] sparse_shift
  */
-template <typename T>
 SparseContour
-get_shift_and_create_contour(T*in, UINT W, UINT H, bool useSh, int shadow_value, UINT & sparse_shift) {
+get_shift_and_create_contour(int *in, UINT W, UINT H, bool useSh, int shadow_value, UINT & sparse_shift) {
     SparseContour sparse_contour;
 
     int i,j;
-    T arg = 0;
+    int arg = 0;
     sparse_shift = 0;
 
     for(i=0; i < H; ++i) {
         for(j=0; j < W; ++j) {
             // out[shiftAr[by]+i*arW[by]+j]=0;
             arg = in[i * W + j];
-            if(arg != 0 && arg != (!useSh)*shadow_value && i!=0 && j!=0 && i!=H && j!=W)
+            if(arg!=0 && arg!=(! useSh)*shadow_value && i!=0 && j!=0 && i!=H && j!=W)
                 if(((in[i * W + j - 1] != arg) ||
                     (in[i * W + j + 1] != arg) ||
                     (in[(i + 1) * W + j] != arg) ||
@@ -123,6 +122,36 @@ get_shift_and_create_contour(T*in, UINT W, UINT H, bool useSh, int shadow_value,
 
     return sparse_contour;
 }
+
+SparseContour
+get_shift_and_create_contour(float *in, UINT W, UINT H, bool useSh, int shadow_value, UINT & sparse_shift) {
+    SparseContour sparse_contour;
+
+    int i,j;
+    float arg = 0;
+    sparse_shift = 0;
+
+    for(i=0; i < H; ++i) {
+        for(j=0; j < W; ++j) {
+            // out[shiftAr[by]+i*arW[by]+j]=0;
+            arg = in[i * W + j];
+            if( float(fabs(arg)) < EPS_FLOAT && (arg - (! useSh) * shadow_value) < EPS_FLOAT && i!=0 && j!=0 && i!=H && j!=W)
+                if(((in[i * W + j - 1] - arg) < EPS_FLOAT ||
+                    (in[i * W + j + 1] - arg) < EPS_FLOAT ||
+                    (in[(i + 1) * W + j] - arg) < EPS_FLOAT ||
+                    (in[(i - 1) * W + j] - arg) < EPS_FLOAT )) {
+                        // out_sparse[shiftAr_sparse[by] + count] = j;
+                        // out_sparse[shiftAr_sparse[by] + count + 1] = i;
+                        sparse_contour.push_back(UINT(i * W + j));
+                        sparse_shift++; //= 2;
+                        //lenght[by]++;
+                }
+        }
+    }
+
+    return sparse_contour;
+}
+
 
 /**
  * @brief cContourBuilder::cContourBuilder
@@ -419,7 +448,7 @@ cContoursBuilderGPU::contoursSetup() {
 
 int
 cContoursBuilderGPU::prepareMemoryCPU() {
-    contoursCPU_sparseArr = static_cast<UINT*> (malloc(sizeof (UINT) * (sparseShiftArr.back() + sparseContoursVec.back().size())));
+    contoursCPU_sparseArr = static_cast<UINT*> (malloc(sizeof (UINT) * (sparseShiftArr.back()))); // + sparseContoursVec.back().size())));
 
     for(size_t i = 0; i < sparseContoursVec.size(); ++i) {
         UINT shift = 0;
@@ -440,7 +469,7 @@ cContoursBuilderGPU::allocateMemoryGPU() {
 
     mem2d = cudaMalloc(reinterpret_cast<void**>(&shiftGPU_sparse), sizeof(UINT) * (sparseShiftArr.size()));
 
-    mem2d = cudaMalloc(reinterpret_cast<void**>(&contourGPU), sizeof(MAPTYPE) * (sparseShiftArr.back() + sparseContoursVec.back().size()));
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&contourGPU), sizeof(MAPTYPE) * (sparseShiftArr.back())); // + sparseContoursVec.back().size()));
 
     return 0;
 }

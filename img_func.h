@@ -92,7 +92,7 @@ public:
  // };
 };
 
-QImage
+/*QImage
 convertTo8(QImage const&InImg) {
    QImage curImg ( InImg.size(), QImage::Format_Indexed8 ) ;
 
@@ -113,7 +113,7 @@ convertTo8(QImage const&InImg) {
    else curImg = InImg ;
 
    return curImg ;
-}
+}*/
 
 template<typename T>
 int convert_array_to_qimage( QImage &qimage_out, T const&img_char_grad) { // , int w, int h) {

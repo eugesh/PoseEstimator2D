@@ -9,6 +9,7 @@ typedef int MAPTYPE;
 typedef int UINT;
 typedef float REAL;
 #define Vector std::vector
+static const float EPS_FLOAT=0.000001f;
 typedef std::vector<QPoint> Contour;
 typedef std::vector<UINT> SparseContour;
 

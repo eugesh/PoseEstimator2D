@@ -4,3 +4,7 @@ iAccurateMatcher::iAccurateMatcher()
 {
 
 }
+
+iAccurateMatcher::~iAccurateMatcher() {
+
+}

@@ -5,6 +5,9 @@ cAccurateMatcherGPU::cAccurateMatcherGPU()
 
 }
 
+cAccurateMatcherGPU::~cAccurateMatcherGPU() {
+
+}
 
 void
 cAccurateMatcherGPU::setInitialPose(cv::Vec3d rvec, cv::Vec3d tvec, cv::Mat frame) {
