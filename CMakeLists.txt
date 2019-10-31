@@ -40,12 +40,15 @@ if(Qt5Widgets_FOUND)
     include_directories(${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})# ${Qt5OpenGL_INCLUDE_DIRS})
 
     add_executable(2DSIM
-        arucomatcher2d.cpp
+        cAccurateMatcherGPU.cpp
+        cArucoMatcher2d.cpp
         cContourBuilder.cpp
         cudaWrapper.cpp
+        iAccurateMatcher.cpp
         i_ContoursMatcher.cpp
         mainwindow.cpp
         #opticalflowmatcher2d.cpp
+        mat_qimage.cpp
         sim_2d.cpp
         main.cpp
         ${UISrcs}
