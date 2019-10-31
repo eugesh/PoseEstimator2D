@@ -3,7 +3,6 @@
 #include "qt_math.hpp"
 #include "cContourBuilder.h"
 #include "mat_qimage.hpp"
-#include "img_func.h"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -125,7 +124,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<
     return img_planar_grad;
 }*/
 
-QImage
+/*QImage
 ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
     QImage qimg_planar;
 
@@ -141,6 +140,24 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
     create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
 
     return img_ar_grad.toQImage();
+}*/
+
+ImgArray<float>
+ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage qimg_planar;
+
+    // Apply affine transform.
+
+    // Transform image: rotate with estimated by Aruco lib quaternion.
+    QVector3D rough_pose3D (rvec[0], rvec[1], rvec[2]);
+    qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
+
+    // Apply Sobel mask.
+    // Apply sobel filter -> gradient.
+    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
+    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    return img_ar_grad;
 }
 
 bool
@@ -176,17 +193,17 @@ ArucoMatcher2D::run() {
         image.copyTo(imageCopy);
 
         // Estimate pose with Aruco lib.
-        if(! estimate_pose(rvecs, tvecs, imageCopy)) continue;
+        if(estimate_pose(rvecs, tvecs, imageCopy)) {
+            qImageCopy = ocv::qt::mat_to_qimage_cpy(imageCopy, false);
 
-        qImageCopy = ocv::qt::mat_to_qimage_cpy(imageCopy, false);
+            ImgArray<float> img_arr = prepareShot2Matcher(rvecs.front(), tvecs.front(), qImageCopy);
 
-        qImg_planar_grad = prepareShot2Matcher(rvecs.front(), tvecs.front(), qImageCopy);
-
-        // Run Accurate matcher -> estimate delta rotation shift.
-        // estimate_poseAccurate
+            // Run Accurate matcher -> estimate delta rotation shift.
+            // estimate_poseAccurate
+        }
 
         // Draw marker: compare Aruco and Accurate matcher results.
-        cv::imshow("frame", image);
+        cv::imshow("frame", imageCopy);
         char key = char(cv::waitKey(3));
         if(key == 27)
             return;

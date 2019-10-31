@@ -6,6 +6,7 @@
 #include "cContourBuilder.h"
 #include "camera_param.hpp"
 #include "cAccurateMatcherGPU.h"
+#include "img_func.h"
 
 // #include <opencv2/video/video.hpp>
 #include <opencv2/opencv.hpp>
@@ -40,7 +41,8 @@ private:
     // x, y, phi relative to image SC.
     bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot);
     // cv::Mat prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame); // Implement
-    QImage prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
+    // QImage prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
+    ImgArray<float> prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
     void clearMemory();
 
 private:

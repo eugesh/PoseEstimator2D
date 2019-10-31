@@ -79,6 +79,9 @@ public:
 
     QImage toQImage() {
         QImage img(w, h, QImage::Format_Indexed8);
+        for(int l = 0; l < 256; ++l)
+            img.setColor( l, QColor(l,l,l).rgb( ) ) ;
+        img.fill(Qt::black) ;
 
         for(int i=0; i < h; ++i) {
             for(int j=0; j < w; ++j) {
