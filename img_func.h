@@ -6,12 +6,13 @@
 #include <QTime>
 #include <QBitmap>
 
-#define IMGTYPE float
+// #define IMGTYPE float
 // #define IMGTYPE unsigned char
 
+template<typename T>
 class ImgArray {
 private:  
-  IMGTYPE*Array;
+  T *Array;
   int w;
   int h;
 public:
@@ -22,15 +23,15 @@ public:
      
      w=map.width ();
      h=map.height();
-     Array=new IMGTYPE[w*h];
+     Array=new T [w*h];
 
      // fp=fopen("D:/temp/files/touch/out_img.txt","w");
-     for(int m=0;m<h;++m) {
-        for(int n=0;n<w;++n) {
+     for(int m=0; m<h; ++m) {
+        for(int n=0; n<w; ++n) {
            if(!negative)
-              Array[m*w+n]=qGray(map.toImage().pixel(n,m));
+              Array[m*w+n] = qGray(map.toImage().pixel(n,m));
            else
-              Array[m*w+n]=255-qGray(map.toImage().pixel(n,m));
+              Array[m*w+n] = 255-qGray(map.toImage().pixel(n,m));
               //fprintf(fp,"%d ",imgArray[m*w+n]);
         }
         //fprintf(fp,"\n");
@@ -46,12 +47,12 @@ public:
      
      w=map.width ();
      h=map.height();
-     Array=new IMGTYPE[w*h];
+     Array=new T [w*h];
      //FILE * fp;
-      //fp=fopen("D:/temp/files/touch/out_img_array.txt","w");
+     //fp=fopen("D:/temp/files/touch/out_img_array.txt","w");
 			     //printf("ImgArray QImage constructor 1\n");
-     for(int m=0;m<h;++m) {
-        for(int n=0;n<w;++n) {
+     for(int m=0; m<h; ++m) {
+        for(int n=0; n<w; ++n) {
            if(!negative)
               Array[m*w+n]=qGray(map.pixel(n,m));
            else
@@ -73,11 +74,25 @@ public:
   };  
   int width ( ) { return w ; };
   int height( ) { return h ; };
-  IMGTYPE*getArray ( ) { return Array ; };
+  T *getArray ( ) { return Array ; };
   QSize getQSize ( ) { return QSize ( w , h ) ; };
 
-  QImage MaptoImage(IMGTYPE*data) {
-	  Q_UNUSED( data )
+    QImage toQImage() {
+        QImage img(w, h, QImage::Format_Indexed8);
+
+        for(int i=0; i < h; ++i) {
+            for(int j=0; j < w; ++j) {
+                img.setPixel((unsigned int)Array[i * w + j], j, i);
+            }
+        }
+
+        return img;
+    }
+
+  QImage MaptoImage(T *data)
+  {
+     Q_UNUSED( data )
+
      QImage img(w,h,QImage::Format_Indexed8);
      //for(int m=0;m<h;++m) {
         //for(int n=0;n<w;++n) {
@@ -139,7 +154,7 @@ int convert_array_to_qimage( QImage &qimage_out, T const&img_char_grad) { // , i
 }
 
 template<typename T>
-int convert_qimage_to_array(T*img_char_grad, QImage qimage_in) {
+int convert_qimage_to_array(T *img_char_grad, QImage qimage_in) {
 
 	int w = qimage_in.width();
 	int h =  qimage_in.height();
