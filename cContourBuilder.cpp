@@ -14,11 +14,11 @@ extern "C" {
 
 int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
                                              MAPTYPE*mapGPU,
-                                             UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
+                                             INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);
 
 int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
                                  MAPTYPE*contourGPU, MAPTYPE*mapGPU,
-                                 UINT*shiftGPU_sparse, UINT*shiftGPU, UINT*widthGPU, UINT*heightGPU, int use_shadow, int shadow_value);
+                                 INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);
 #ifdef __cplusplus
 }
 #endif
@@ -95,15 +95,14 @@ Contour create_contour_map_combi_sparse(T*in, UINT shift, UINT W, UINT H, int us
  * param[out] sparse_shift
  */
 SparseContour
-get_shift_and_create_contour(int *in, UINT W, UINT H, bool useSh, int shadow_value, UINT & sparse_shift) {
+get_shift_and_create_contour(int *in, INT W, INT H, bool useSh, int shadow_value, INT & sparse_shift) {
     SparseContour sparse_contour;
 
-    int i,j;
     int arg = 0;
     sparse_shift = 0;
 
-    for(i=0; i < H; ++i) {
-        for(j=0; j < W; ++j) {
+    for(int i=0; i < H; ++i) {
+        for(int j=0; j < W; ++j) {
             // out[shiftAr[by]+i*arW[by]+j]=0;
             arg = in[i * W + j];
             if(arg!=0 && arg!=(! useSh)*shadow_value && i!=0 && j!=0 && i!=H && j!=W)
@@ -111,11 +110,8 @@ get_shift_and_create_contour(int *in, UINT W, UINT H, bool useSh, int shadow_val
                     (in[i * W + j + 1] != arg) ||
                     (in[(i + 1) * W + j] != arg) ||
                     (in[(i - 1) * W + j] != arg))) {
-                        // out_sparse[shiftAr_sparse[by] + count] = j;
-                        // out_sparse[shiftAr_sparse[by] + count + 1] = i;
-                        sparse_contour.push_back(UINT(i * W + j));
-                        sparse_shift++; //= 2;
-                        //lenght[by]++;
+                        sparse_contour.push_back(INT(i * W + j));
+                        sparse_shift++;
                 }
         }
     }
@@ -124,15 +120,14 @@ get_shift_and_create_contour(int *in, UINT W, UINT H, bool useSh, int shadow_val
 }
 
 SparseContour
-get_shift_and_create_contour(float *in, UINT W, UINT H, bool useSh, int shadow_value, UINT & sparse_shift) {
+get_shift_and_create_contour(float *in, INT W, INT H, bool useSh, int shadow_value, INT & sparse_shift) {
     SparseContour sparse_contour;
 
-    int i,j;
     float arg = 0;
     sparse_shift = 0;
 
-    for(i=0; i < H; ++i) {
-        for(j=0; j < W; ++j) {
+    for(int i=0; i < H; ++i) {
+        for(int j=0; j < W; ++j) {
             // out[shiftAr[by]+i*arW[by]+j]=0;
             arg = in[i * W + j];
             if( float(fabs(arg)) < EPS_FLOAT && (arg - (! useSh) * shadow_value) < EPS_FLOAT && i!=0 && j!=0 && i!=H && j!=W)
@@ -140,11 +135,8 @@ get_shift_and_create_contour(float *in, UINT W, UINT H, bool useSh, int shadow_v
                     (in[i * W + j + 1] - arg) < EPS_FLOAT ||
                     (in[(i + 1) * W + j] - arg) < EPS_FLOAT ||
                     (in[(i - 1) * W + j] - arg) < EPS_FLOAT )) {
-                        // out_sparse[shiftAr_sparse[by] + count] = j;
-                        // out_sparse[shiftAr_sparse[by] + count + 1] = i;
-                        sparse_contour.push_back(UINT(i * W + j));
-                        sparse_shift++; //= 2;
-                        //lenght[by]++;
+                        sparse_contour.push_back(INT(i * W + j));
+                        sparse_shift++;
                 }
         }
     }
@@ -242,18 +234,18 @@ cContoursBuilderGPU::setTemplates(std::vector<cv::Mat> templates_vec) {
     // shiftArr = new UINT[templates_vec.size()];
     // shiftArr[0] = 0;
     for(size_t i = 1; i < templates_vec.size(); ++i) {
-        sparseShiftArr.push_back(sparseShiftArr[i-1] + UINT(templates_vec[i-1].cols * templates_vec[i-1].rows));
+        sparseShiftArr.push_back(sparseShiftArr[i-1] + INT(templates_vec[i-1].cols * templates_vec[i-1].rows));
     }
 }
 
 void
 cContoursBuilderGPU::append(QImage const& img) {
-    ImgArray img_ar(img);
+    ImgArray<INT> img_ar(img);
 
     // Estimate shift for sparse contour.
-    UINT sparse_shift;
+    INT sparse_shift;
     SparseContour contour =
-    get_shift_and_create_contour(img_ar.getArray(), UINT(img.width()), UINT(img.height()), false, 0, sparse_shift);
+    get_shift_and_create_contour(img_ar.getArray(), INT(img.width()), INT(img.height()), false, 0, sparse_shift);
 
     // Append shift, w, h;
     if(sparseShiftArr.size()) {
@@ -262,8 +254,8 @@ cContoursBuilderGPU::append(QImage const& img) {
         sparseShiftArr.push_back(sparse_shift);
     }
 
-    widthArr.push_back(UINT(img.width()));
-    heightArr.push_back(UINT(img.height()));
+    widthArr.push_back(INT(img.width()));
+    heightArr.push_back(INT(img.height()));
     sparseContoursVec.push_back(contour);
 
     if(debug) {
@@ -288,12 +280,12 @@ cContoursBuilderGPU::append(cv::Mat img) {
     QImage qimg = ocv::qt::mat_to_qimage_cpy(img);
 
     // Convert image to 1D array.
-    ImgArray img_ar(qimg);
+    ImgArray<INT> img_ar(qimg);
 
     // Estimate shift for sparse contour.
-    UINT sparse_shift;
+    INT sparse_shift;
     SparseContour contour =
-    get_shift_and_create_contour(img_ar.getArray(), UINT(img.cols), UINT(img.rows), false, 0, sparse_shift);
+    get_shift_and_create_contour(img_ar.getArray(), INT(img.cols), INT(img.rows), false, 0, sparse_shift);
 
     // Append shift, w, h;
     if(sparseShiftArr.size()) {
@@ -302,8 +294,8 @@ cContoursBuilderGPU::append(cv::Mat img) {
         sparseShiftArr.push_back(sparse_shift);
     }
 
-    widthArr.push_back(UINT(img.cols));
-    heightArr.push_back(UINT(img.rows));
+    widthArr.push_back(INT(img.cols));
+    heightArr.push_back(INT(img.rows));
 
     // Generate sparse contour.
 
@@ -415,8 +407,8 @@ cContoursBuilderGPU::contour2Qimage(SparseContour sparse_contour, int w, int h) 
 
 
     for (size_t i=0; i < sparse_contour.size(); ++i) {
-        UINT x = sparse_contour[i] % UINT(w);
-        UINT y = sparse_contour[i] / UINT(w);
+        INT x = sparse_contour[i] % INT(w);
+        INT y = sparse_contour[i] / INT(w);
 
         img.setPixel(QPoint(x,y), 255);
     }
@@ -448,14 +440,14 @@ cContoursBuilderGPU::contoursSetup() {
 
 int
 cContoursBuilderGPU::prepareMemoryCPU() {
-    contoursCPU_sparseArr = static_cast<UINT*> (malloc(sizeof (UINT) * (sparseShiftArr.back()))); // + sparseContoursVec.back().size())));
+    contoursCPU_sparseArr = static_cast<INT*> (malloc(sizeof (INT) * (sparseShiftArr.back()))); // + sparseContoursVec.back().size())));
 
     for(size_t i = 0; i < sparseContoursVec.size(); ++i) {
-        UINT shift = 0;
+        INT shift = 0;
         if(i > 0) {
             shift = sparseShiftArr[i-1];
         }
-        memcpy(&contoursCPU_sparseArr[shift], sparseContoursVec[i].data(), sizeof(UINT) * sparseContoursVec[i].size());
+        memcpy(&contoursCPU_sparseArr[shift], sparseContoursVec[i].data(), sizeof(INT) * sparseContoursVec[i].size());
     }
 
     return 0;
@@ -463,11 +455,11 @@ cContoursBuilderGPU::prepareMemoryCPU() {
 
 int
 cContoursBuilderGPU::allocateMemoryGPU() {
-    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&widthGPU), sizeof(UINT) * widthArr.size());
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&widthGPU), sizeof(INT) * widthArr.size());
 
-    mem2d = cudaMalloc(reinterpret_cast<void**>(&heightGPU), sizeof(UINT) * heightArr.size());
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&heightGPU), sizeof(INT) * heightArr.size());
 
-    mem2d = cudaMalloc(reinterpret_cast<void**>(&shiftGPU_sparse), sizeof(UINT) * (sparseShiftArr.size()));
+    mem2d = cudaMalloc(reinterpret_cast<void**>(&shiftGPU_sparse), sizeof(INT) * (sparseShiftArr.size()));
 
     mem2d = cudaMalloc(reinterpret_cast<void**>(&contourGPU), sizeof(MAPTYPE) * (sparseShiftArr.back())); // + sparseContoursVec.back().size()));
 
@@ -476,11 +468,11 @@ cContoursBuilderGPU::allocateMemoryGPU() {
 
 int
 cContoursBuilderGPU::copyMemory2GPU() {
-    cudaError_t mem2d = cudaMemcpy(widthGPU, widthArr.data(), sizeof(UINT) * widthArr.size(), cudaMemcpyHostToDevice);
+    cudaError_t mem2d = cudaMemcpy(widthGPU, widthArr.data(), sizeof(INT) * widthArr.size(), cudaMemcpyHostToDevice);
 
-    mem2d = cudaMemcpy(heightGPU, heightArr.data(), sizeof(UINT) * heightArr.size(), cudaMemcpyHostToDevice);
+    mem2d = cudaMemcpy(heightGPU, heightArr.data(), sizeof(INT) * heightArr.size(), cudaMemcpyHostToDevice);
 
-    mem2d = cudaMemcpy(shiftGPU_sparse, sparseShiftArr.data(), sizeof(UINT) * sparseShiftArr.size(), cudaMemcpyHostToDevice);
+    mem2d = cudaMemcpy(shiftGPU_sparse, sparseShiftArr.data(), sizeof(INT) * sparseShiftArr.size(), cudaMemcpyHostToDevice);
 
     mem2d = cudaMemcpy(contourGPU, contoursCPU_sparseArr, sizeof(MAPTYPE) * (sparseShiftArr.back() + sparseContoursVec.back().size()), cudaMemcpyHostToDevice);
 

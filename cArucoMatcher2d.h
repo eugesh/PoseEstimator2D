@@ -7,7 +7,7 @@
 #include "camera_param.hpp"
 #include "cAccurateMatcherGPU.h"
 
-#include <opencv2/video/video.hpp>
+// #include <opencv2/video/video.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp> // /usr/local/include/opencv4/
 #include <opencv2/video.hpp>
@@ -38,14 +38,15 @@ signals:
 private:
     void init_contours();
     // x, y, phi relative to image SC.
-    bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame);
+    bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot);
+    // cv::Mat prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame); // Implement
+    QImage prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
     void clearMemory();
 
 private:
-    static const int def_dict = cv::aruco::DICT_7X7_50;
     cv::Ptr<cv::aruco::Dictionary> dictionary;
     Vector<int> m_ids_vec;
-    UINT m_template_size;
+    INT m_template_size;
 
     constexpr static float Marker_size = 0.1f; // [m]
     IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;

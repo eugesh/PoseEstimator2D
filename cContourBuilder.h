@@ -34,23 +34,23 @@ public:
 public:
     // Acces funcs for resulting arrays.
     MAPTYPE * getSparseContours() { return mapContoursArr.data(); }
-    UINT * getShiftsArr() { return sparseShiftArr.data(); }
-    UINT * getWArr() { return widthArr.data(); }
-    UINT * getHArr() { return heightArr.data(); }
+    INT * getShiftsArr() { return sparseShiftArr.data(); }
+    INT * getWArr() { return widthArr.data(); }
+    INT * getHArr() { return heightArr.data(); }
     MAPTYPE * getSparseContoursGPU() { return contourGPU; }
-    UINT * getShiftsGPU() { return shiftGPU; }
-    UINT * getSparceShiftsGPU() { return shiftGPU; }
-    UINT * getWGPU() { return widthGPU; }
-    UINT * getHGPU() { return heightGPU; }
+    INT * getShiftsGPU() { return shiftGPU; }
+    INT * getSparceShiftsGPU() { return shiftGPU; }
+    INT * getWGPU() { return widthGPU; }
+    INT * getHGPU() { return heightGPU; }
     void clearAll();
     // Debug.
     bool validateBuildContours(QString path="");
     static QImage contour2Qimage(SparseContour sparse_contour, int w, int h);
     // Call it after all contours creation and when all of them appended by #append(QImage const& img) or #append(cv::Mat img).
     void contoursSetup();
+    void initAll();
 
 private:
-    void initAll();
     int prepareMemoryCPU();
     int allocateMemoryGPU();
     int copyMemory2GPU();
@@ -64,19 +64,19 @@ private:
     Vector<MAPTYPE> mapContoursArr;
     Vector<SparseContour> sparseContoursVec;
     //!< Array of contours' length.
-    Vector<UINT> sparseShiftArr;
-    Vector<UINT> widthArr;
-    Vector<UINT> heightArr;
+    Vector<INT> sparseShiftArr;
+    Vector<INT> widthArr;
+    Vector<INT> heightArr;
     Vector<int> m_targetValues;
     Vector<int> m_bckgValues;
     Vector<cv::Mat> m_templates_vec;
-    UINT * contoursCPU_sparseArr;
+    INT * contoursCPU_sparseArr;
 
 private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
     MAPTYPE * mapGPU;
-    UINT * shiftGPU; // ToDo: Is 2^16 enough?
-    UINT * shiftGPU_sparse;
-    UINT * widthGPU;
-    UINT * heightGPU;
+    INT * shiftGPU; // ToDo: Is 2^16 enough?
+    INT * shiftGPU_sparse;
+    INT * widthGPU;
+    INT * heightGPU;
 };
