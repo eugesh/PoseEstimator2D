@@ -60,7 +60,7 @@ ArucoMatcher2D::init_contours() {
                 q_marker_tr = ApplyTransform(q_marker_in, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
                 m_cbg.append(q_marker_tr);
 
-                if(debug)
+                if(DEBUG)
                     q_marker_tr.save(QString("./tr/tr_%1_%2_%3.png").arg(int(pitch*10)).arg(int(roll*10)).arg(int(yaw*10)));
             }
         }
@@ -98,13 +98,8 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
-    cv::Mat rot_matrix;
-    cv::Rodrigues(rvecs, rot_matrix);
-    cv::Mat quat = mRot2Quat(rot_matrix);
-    emit quat_raw(quat);
-
     // Draw markers.
-    for(size_t i=0; i < ids.size(); i++)
+    for(size_t i=0; i < ids.size() && DRAW; i++)
         cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
 
 
@@ -150,12 +145,28 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
 
     // Transform image: rotate with estimated by Aruco lib quaternion.
     QVector3D rough_pose3D (rvec[0], rvec[1], rvec[2]);
+
+    cv::Mat rot_matrix;
+    cv::Rodrigues(rvec, rot_matrix);
+    cv::Mat quat = mRot2Quat(rot_matrix);
+    // emit quat_raw(quat);
+
     qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
     ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
     create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    if(DEBUG) {
+        // Save image.
+        float range = (img_ar_grad.max() - img_ar_grad.min());
+        img_ar_grad = img_ar_grad * float(255) / range;
+        range = (img_ar.max() - img_ar.min());
+        img_ar.toQImage().save("Before_grad.png");
+        img_ar_grad.toQImage().save("GRADIENT.png");
+        qimg_planar.save("planar.png");
+    }
 
     return img_ar_grad;
 }
@@ -191,11 +202,10 @@ ArucoMatcher2D::run() {
 
         inputVideo.retrieve(image);
         image.copyTo(imageCopy);
+        qImageCopy = ocv::qt::mat_to_qimage_cpy(image, false);
 
         // Estimate pose with Aruco lib.
         if(estimate_pose(rvecs, tvecs, imageCopy)) {
-            qImageCopy = ocv::qt::mat_to_qimage_cpy(imageCopy, false);
-
             ImgArray<float> img_arr = prepareShot2Matcher(rvecs.front(), tvecs.front(), qImageCopy);
 
             // Run Accurate matcher -> estimate delta rotation shift.

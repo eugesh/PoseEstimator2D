@@ -20,9 +20,11 @@ public:
      // printf("ImgArray constructor\n");
      // QTime Timer2 ;
      // Timer2.start() ;    
-     
+     Array = nullptr;
      w=map.width ();
      h=map.height();
+     if(map.isNull() || w*h <= 0)
+         return;
      Array=new T [w*h];
 
      // fp=fopen("D:/temp/files/touch/out_img.txt","w");
@@ -40,13 +42,16 @@ public:
      // fprintf(stdout,"The time of the create imgArray = %lf seconds\n", double(Timer2.elapsed()) / 1000. ) ;
   };
 
-  ImgArray(QImage map,bool negative=0) {
+  ImgArray(QImage map, bool negative=0) {
      // printf("ImgArray QImage constructor\n");
      // QTime Timer2 ;
      // Timer2.start() ;    
-     
+     Array = nullptr;
      w=map.width ();
      h=map.height();
+     if(map.isNull() || w*h <= 0)
+         return;
+
      Array=new T [w*h];
      //FILE * fp;
      //fp=fopen("D:/temp/files/touch/out_img_array.txt","w");
@@ -85,11 +90,75 @@ public:
 
         for(int i=0; i < h; ++i) {
             for(int j=0; j < w; ++j) {
-                img.setPixel((unsigned int)Array[i * w + j], j, i);
+                int val = (int)Array[i * w + j];
+
+                img.setPixel(j, i, val);
             }
         }
 
         return img;
+    }
+
+    T max() {
+        if(! Array)
+            return -1;
+
+        T max=Array[0];
+
+        for(int i=0; i < h*w; ++i) {
+            if(Array[i] > max)
+                max = Array[i];
+        }
+        return max;
+    }
+
+    T min() {
+        if(! Array)
+            return -1;
+
+        T min=Array[0];
+
+        for(int i=0; i < h*w; ++i) {
+            if(Array[i] < min)
+                min = Array[i];
+        }
+        return min;
+    }
+
+    ImgArray & operator/(T a) {
+        if(Array && (a > 0 || a < 0))
+            for(int i=0; i < h*w; ++i) {
+                    Array[i] = Array[i] / a;
+            }
+
+        return *this;
+    }
+
+    ImgArray & operator*(T a) {
+        if(Array)
+            for(int i=0; i < h*w; ++i) {
+                    Array[i] = Array[i] * a;
+            }
+
+        return *this;
+    }
+
+    ImgArray & operator-(T a) {
+        if(Array)
+            for(int i=0; i < h*w; ++i) {
+                    Array[i] = Array[i] - a;
+            }
+
+        return *this;
+    }
+
+    ImgArray & operator+(T a) {
+        if(Array)
+            for(int i=0; i < h*w; ++i) {
+                    Array[i] = Array[i] + a;
+            }
+
+        return *this;
     }
 
   QImage MaptoImage(T *data)
@@ -106,6 +175,8 @@ public:
         //}
      return img;
   }; 
+
+
  // ImgArray(QPixmap map,bool negative=0) {
  // };
 };

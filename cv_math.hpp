@@ -142,4 +142,28 @@ cv::Mat rot2euler(const cv::Mat & rotationMatrix)
     return euler;
 }
 
+cv::Mat
+rvec2Euler (cv::Vec3d rvec) {
+    cv::Mat EulerAngles;
+    cv::Mat rot_matrix;
+
+    cv::Rodrigues(rvec, rot_matrix);
+    // cv::Mat quat = mRot2Quat(rot_matrix);
+    EulerAngles = rot2euler(rot_matrix);
+
+    return EulerAngles;
+}
+
+cv::Mat
+rvec2Quaternion (cv::Vec3d rvec) {
+    cv::Mat EulerAngles;
+    cv::Mat rot_matrix;
+
+    cv::Rodrigues(rvec, rot_matrix);
+    cv::Mat quat = mRot2Quat(rot_matrix);
+    // EulerAngles = rot2euler(rot_matrix);
+
+    return quat;
+}
+
 #endif // CV_MATH_HPP
