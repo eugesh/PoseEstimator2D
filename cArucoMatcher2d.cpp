@@ -98,6 +98,11 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
+    /*cv::Mat rot_matrix;
+    cv::Rodrigues(rvecs, rot_matrix);
+    cv::Mat quat = mRot2Quat(rot_matrix);
+    emit quat_raw(quat);*/
+
     // Draw markers.
     for(size_t i=0; i < ids.size() && DRAW; i++)
         cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
@@ -141,16 +146,13 @@ ImgArray<float>
 ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
     QImage qimg_planar;
 
+    // Convert Rodrigues to Euler.
+    cv::Mat EulerAngles = rvec2Euler(rvec);
+
     // Apply affine transform.
-
     // Transform image: rotate with estimated by Aruco lib quaternion.
-    QVector3D rough_pose3D (rvec[0], rvec[1], rvec[2]);
-
-    cv::Mat rot_matrix;
-    cv::Rodrigues(rvec, rot_matrix);
-    cv::Mat quat = mRot2Quat(rot_matrix);
-    // emit quat_raw(quat);
-
+    QVector3D rough_pose3D = QVector3D(EulerAngles.at<double>(0), EulerAngles.at<double>(1), EulerAngles.at<double>(2));
+    rough_pose3D *= float(180.0 / M_PI);
     qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
 
     // Apply Sobel mask.
@@ -173,13 +175,7 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
 
 bool
 ArucoMatcher2D::estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
-
-    // Transform current frame
-
-    // Gradient of the frame.
-    // cv::Mat frame_grad = grad(frame); // ToDO
     // Get set of contours for the found marker (near to found angles).
-
 
     // Match contours.
 
