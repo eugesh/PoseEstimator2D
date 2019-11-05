@@ -60,7 +60,7 @@ ArucoMatcher2D::init_contours() {
     QImage q_marker_in, q_marker_tr;
     q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
 
-    q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied);
+    q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied).mirrored();
 
     m_cbg.clearAll();
     m_cbg.initAll();
@@ -78,7 +78,6 @@ ArucoMatcher2D::init_contours() {
         }
     }
 }
-
 
 // x, y, phi relative to image SC.
 // Rough estimation by standard library (Aruco lib).
@@ -99,73 +98,6 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 
     return true;
 }
-
-/*cv::Mat
-ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
-    cv::Mat img_planar_grad;
-
-    // Apply affine transform.
-
-
-    // Apply Sobel mask.
-
-
-    return img_planar_grad;
-}*/
-
-/*QImage
-ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
-    QImage qimg_planar;
-
-    // Apply affine transform.
-
-    // Transform image: rotate with estimated by Aruco lib quaternion.
-    QVector3D rough_pose3D (rvec[0], rvec[1], rvec[2]);
-    qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
-
-    // Apply Sobel mask.
-    // Apply sobel filter -> gradient.
-    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
-    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
-
-    return img_ar_grad.toQImage();
-}*/
-
-/*ImgArray<float>
-ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
-    QImage qimg_planar;
-
-    // Convert Rodrigues to Quaterninon.
-    QQuaternion quat = rvec2QQaternion(rvec);
-
-    // Convert quaternion to Euler.
-    cv::Mat EulerAngles = rvec2Euler(rvec);
-    quat.toEulerAngles();
-
-    // Apply affine transform.
-    // Transform image: rotate with estimated by Aruco lib quaternion.
-    QVector3D rough_pose3D = QVector3D(EulerAngles.at<double>(0), EulerAngles.at<double>(1), EulerAngles.at<double>(2));
-    rough_pose3D *= float(180.0 / M_PI);
-    QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
-    qimg_planar = ApplyTransform(shot, Tr, rough_pose3D);
-
-    // Apply Sobel mask.
-    // Apply sobel filter -> gradient.
-    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
-    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
-
-    if(DEBUG) {
-        // Save image.
-        float range = (img_ar_grad.max() - img_ar_grad.min());
-        img_ar_grad = img_ar_grad * float(255) / range;
-        range = (img_ar.max() - img_ar.min());
-        img_ar.toQImage().save("Before_grad.png");
-        img_ar_grad.toQImage().save("GRADIENT.png");
-        qimg_planar.save("planar.png");
-    }
-
-    return img_ar_grad;
-}*/
 
 ImgArray<float>
 ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
@@ -263,3 +195,70 @@ draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, 
     for(size_t i=0; i < ids.size(); i++)
         cv::aruco::drawAxis(image, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
 }
+
+/*cv::Mat
+ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
+    cv::Mat img_planar_grad;
+
+    // Apply affine transform.
+
+
+    // Apply Sobel mask.
+
+
+    return img_planar_grad;
+}*/
+
+/*QImage
+ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage qimg_planar;
+
+    // Apply affine transform.
+
+    // Transform image: rotate with estimated by Aruco lib quaternion.
+    QVector3D rough_pose3D (rvec[0], rvec[1], rvec[2]);
+    qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
+
+    // Apply Sobel mask.
+    // Apply sobel filter -> gradient.
+    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
+    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    return img_ar_grad.toQImage();
+}*/
+
+/*ImgArray<float>
+ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage qimg_planar;
+
+    // Convert Rodrigues to Quaterninon.
+    QQuaternion quat = rvec2QQaternion(rvec);
+
+    // Convert quaternion to Euler.
+    cv::Mat EulerAngles = rvec2Euler(rvec);
+    quat.toEulerAngles();
+
+    // Apply affine transform.
+    // Transform image: rotate with estimated by Aruco lib quaternion.
+    QVector3D rough_pose3D = QVector3D(EulerAngles.at<double>(0), EulerAngles.at<double>(1), EulerAngles.at<double>(2));
+    rough_pose3D *= float(180.0 / M_PI);
+    QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
+    qimg_planar = ApplyTransform(shot, Tr, rough_pose3D);
+
+    // Apply Sobel mask.
+    // Apply sobel filter -> gradient.
+    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
+    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    if(DEBUG) {
+        // Save image.
+        float range = (img_ar_grad.max() - img_ar_grad.min());
+        img_ar_grad = img_ar_grad * float(255) / range;
+        range = (img_ar.max() - img_ar.min());
+        img_ar.toQImage().save("Before_grad.png");
+        img_ar_grad.toQImage().save("GRADIENT.png");
+        qimg_planar.save("planar.png");
+    }
+
+    return img_ar_grad;
+}*/
