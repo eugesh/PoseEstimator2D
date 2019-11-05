@@ -5,6 +5,7 @@
 #include <QPoint>
 #include <opencv2/aruco.hpp>
 
+typedef float IMGTYPE;
 typedef int MAPTYPE;
 typedef int INT;
 typedef float REAL;

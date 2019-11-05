@@ -77,10 +77,12 @@ public:
     delete[] Array;
     // printf("ImgArray destructor2\n");
   };  
-  int width ( ) { return w ; };
-  int height( ) { return h ; };
-  T *getArray ( ) { return Array ; };
-  QSize getQSize ( ) { return QSize ( w , h ) ; };
+public:
+  int width ( ) const { return w ; }
+  int height( ) const { return h ; }
+  T *getArray ( ) { return Array ; }
+  const T *getArray ( ) const { return Array ; }
+  QSize getQSize ( ) const { return QSize ( w , h ) ; }
 
     QImage toQImage() {
         QImage img(w, h, QImage::Format_Indexed8);

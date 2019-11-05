@@ -1,3 +1,6 @@
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+
 #include "cAccurateMatcherGPU.h"
 
 cAccurateMatcherGPU::cAccurateMatcherGPU()
@@ -18,4 +21,22 @@ cAccurateMatcherGPU::setInitialPose(cv::Vec3d rvec, cv::Vec3d tvec, cv::Mat fram
 void
 cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, cv::Mat frame) {
 
+}
+
+void
+cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, ImgArray<IMGTYPE> imgArr) {
+    // Translate (copy) Gradient of current shot to GPU.
+    translateShot2GPU(imgArr);
+
+}
+
+int
+cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
+    // Allocate memory.
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&mapGPU), sizeof(IMGTYPE) * imgArr.width() * imgArr.height());
+
+    // Copy memory.
+    mem2d = cudaMemcpy(mapGPU, imgArr.getArray(), sizeof(IMGTYPE) * imgArr.width() * imgArr.height(), cudaMemcpyHostToDevice);
+
+    return 0;
 }

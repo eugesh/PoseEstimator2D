@@ -4,6 +4,8 @@
 #include <opencv2/video.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
+#include <QQuaternion>
+
 
 inline float SIGN(float x) {
     return (x >= 0.0f) ? +1.0f : -1.0f;
@@ -165,5 +167,23 @@ rvec2Quaternion (cv::Vec3d rvec) {
 
     return quat;
 }
+
+QQuaternion rvec2QQaternion (cv::Vec3d rvec) {
+    QQuaternion quat;
+
+    double xr = rvec[0];
+    double yr = rvec[1];
+    double zr = rvec[2];
+
+    float theta = (float)(sqrt(xr*xr + yr*yr + zr*zr) * 180 / M_PI);
+    QVector3D axis = QVector3D(xr, yr, zr);
+    // Quaternion rot = Quaternion.AngleAxis (theta, axis);
+
+    quat = QQuaternion::fromAxisAndAngle(axis, theta);
+
+    return quat;
+}
+// QQuaternion QQuaternion::fromAxisAndAngle(const QVector3D &axis, float angle)
+// Creates a normalized quaternion that corresponds to rotating through angle degrees about the specified 3D axis.
 
 #endif // CV_MATH_HPP

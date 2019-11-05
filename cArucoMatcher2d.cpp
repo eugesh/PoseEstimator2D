@@ -10,15 +10,24 @@
 #include <cuda.h>
 #include <math.h>
 
-/*
- * SVEN web camera parameters.
- */
-/*static const cv::Mat intrinsic_matrix = (cv::Mat_<double>(3,3) << 1.1327961595847169e+03, 0.0000000000000000e+00, 3.2525414402158128e+02,
-                                                                  0.0000000000000000e+00, 1.1475162233789308e+03, 1.3878903347777373e+02,
-                                                                  0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00);
 
-static const cv::Mat distortion_coeff = (cv::Mat_<double>(1,5) <<
-              -2.3347424588689411e-01, 1.7924637678196107e+00, -1.8478504713094826e-02, -3.5034777946027344e-03, -6.9593099179000903e+00);*/
+void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
+    cv::Mat marker;
+
+    for(int i=0; i < 50; ++i) {
+        cv::aruco::drawMarker(dictionary, i, template_size, marker);
+        if(marker.cols > 0)
+            cv::imwrite(QString("%1_id%2.png").arg(name).arg(i).toUtf8().toStdString(), marker);
+    }
+    // cv::namedWindow ("marker", 1);
+
+    if(marker.cols > 0) {
+        cv::imshow("marker", marker);
+        char key = char (cv::waitKey(3));
+        if (key == 27)
+            return;
+    }
+}
 
 ArucoMatcher2D::ArucoMatcher2D(QObject *parent) : SIM_2D (parent)
 {
@@ -44,6 +53,9 @@ ArucoMatcher2D::init_contours() {
     cv::Mat marker;
     cv::aruco::drawMarker(dictionary, m_ids_vec.front(), m_template_size, marker);
 
+    if(DEBUG)
+        print_contours(dictionary, m_template_size, "5x5");
+
     // Convert cv::Mat to QImage
     QImage q_marker_in, q_marker_tr;
     q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
@@ -67,23 +79,6 @@ ArucoMatcher2D::init_contours() {
     }
 }
 
-void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
-    cv::Mat marker;
-
-    for(int i=0; i < 50; ++i) {
-        cv::aruco::drawMarker(dictionary, i, template_size, marker);
-        if(marker.cols > 0)
-            cv::imwrite(QString("%1_id%2.png").arg(name).arg(i).toUtf8().toStdString(), marker);
-    }
-    // cv::namedWindow ("marker", 1);
-
-    if(marker.cols > 0) {
-        cv::imshow("marker", marker);
-        char key = char (cv::waitKey(3));
-        if (key == 27)
-            return;
-    }
-}
 
 // x, y, phi relative to image SC.
 // Rough estimation by standard library (Aruco lib).
@@ -98,15 +93,9 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
-    /*cv::Mat rot_matrix;
-    cv::Rodrigues(rvecs, rot_matrix);
-    cv::Mat quat = mRot2Quat(rot_matrix);
-    emit quat_raw(quat);*/
-
     // Draw markers.
     for(size_t i=0; i < ids.size() && DRAW; i++)
         cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
-
 
     return true;
 }
@@ -153,7 +142,8 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
     // Transform image: rotate with estimated by Aruco lib quaternion.
     QVector3D rough_pose3D = QVector3D(EulerAngles.at<double>(0), EulerAngles.at<double>(1), EulerAngles.at<double>(2));
     rough_pose3D *= float(180.0 / M_PI);
-    qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), rough_pose3D);
+    QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
+    qimg_planar = ApplyTransform(shot, Tr, rough_pose3D);
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
@@ -175,11 +165,14 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
 
 bool
 ArucoMatcher2D::estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
-    // Get set of contours for the found marker (near to found angles).
+    // Get (generate) set of contours for the found marker (near to found angles).
+
 
     // Match contours.
+    // Estimate mean values for each seeking contour -> build table of mean values.
 
-    // Find maximum.
+
+    // Find maximum in the table.
 
 
     return true;

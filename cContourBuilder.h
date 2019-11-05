@@ -74,7 +74,7 @@ private:
 
 private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
-    MAPTYPE * mapGPU;
+    MAPTYPE * mapGPU; // Deprecated
     INT * shiftGPU; // ToDo: Is 2^16 enough?
     INT * shiftGPU_sparse;
     INT * widthGPU;
