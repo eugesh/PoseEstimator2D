@@ -131,12 +131,16 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
     return img_ar_grad.toQImage();
 }*/
 
-ImgArray<float>
+/*ImgArray<float>
 ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
     QImage qimg_planar;
 
-    // Convert Rodrigues to Euler.
+    // Convert Rodrigues to Quaterninon.
+    QQuaternion quat = rvec2QQaternion(rvec);
+
+    // Convert quaternion to Euler.
     cv::Mat EulerAngles = rvec2Euler(rvec);
+    quat.toEulerAngles();
 
     // Apply affine transform.
     // Transform image: rotate with estimated by Aruco lib quaternion.
@@ -144,6 +148,39 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
     rough_pose3D *= float(180.0 / M_PI);
     QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
     qimg_planar = ApplyTransform(shot, Tr, rough_pose3D);
+
+    // Apply Sobel mask.
+    // Apply sobel filter -> gradient.
+    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
+    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    if(DEBUG) {
+        // Save image.
+        float range = (img_ar_grad.max() - img_ar_grad.min());
+        img_ar_grad = img_ar_grad * float(255) / range;
+        range = (img_ar.max() - img_ar.min());
+        img_ar.toQImage().save("Before_grad.png");
+        img_ar_grad.toQImage().save("GRADIENT.png");
+        qimg_planar.save("planar.png");
+    }
+
+    return img_ar_grad;
+}*/
+
+ImgArray<float>
+ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage qimg_planar;
+
+    // Convert Rodrigues to Quaterninon.
+    QQuaternion quat = rvec2QQaternion(rvec);
+
+    // Convert quaternion to Euler.
+    QVector3D EulerAngles = quat.toEulerAngles();
+
+    // Apply affine transform.
+    // Transform image: rotate with estimated by Aruco lib quaternion.
+    QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
+    qimg_planar = ApplyTransform(shot, Tr, EulerAngles);
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
