@@ -10,6 +10,13 @@
 #include <cuda.h>
 #include <math.h>
 
+void
+draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, std::vector<cv::Vec3d> tvecs, std::vector<std::vector<cv::Point2f>> corners) {
+    for(size_t i=0; i < ids.size(); i++) {
+        cv::aruco::drawDetectedMarkers(image, corners);
+        cv::aruco::drawAxis(image, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
+    }
+}
 
 void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
     cv::Mat marker;
@@ -32,7 +39,7 @@ void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size
 ArucoMatcher2D::ArucoMatcher2D(QObject *parent) : SIM_2D (parent)
 {
     dictionary = cv::aruco::getPredefinedDictionary(def_dict);
-    m_ids_vec.push_back(0);
+    m_ids_vec.push_back(2);
     m_template_size = templates_size;
     init_contours();
     m_cbg.contoursSetup();
@@ -93,8 +100,10 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
     // Draw markers.
-    for(size_t i=0; i < ids.size() && DRAW; i++)
-        cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
+    if(DRAW)
+        draw_markers(shot, ids, rvecs, tvecs, corners);
+    // for(size_t i=0; i < ids.size() && DRAW; i++)
+       // cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
 
     return true;
 }
@@ -188,12 +197,6 @@ ArucoMatcher2D::clearMemory() {
        cudaFree(imgGPU_grad);
        imgGPU_grad=nullptr;
     }
-}
-
-void
-draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, std::vector<cv::Vec3d> tvecs) {
-    for(size_t i=0; i < ids.size(); i++)
-        cv::aruco::drawAxis(image, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
 }
 
 /*cv::Mat
