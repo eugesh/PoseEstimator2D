@@ -28,6 +28,7 @@ public:
     // To be possible to implement it with QThread.
     virtual void run();
     bool estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame);
+    bool estimate_pose(std::vector<int> &ids, std::vector<std::vector<cv::Point2f> > &corners, std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame);
 
 public slots:
     void setFrame(cv::Mat frame) { m_currentFrame = frame; }
@@ -42,7 +43,7 @@ private:
     bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot);
     // cv::Mat prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame); // Implement
     // QImage prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
-    ImgArray<float> prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
+    ImgArray<float> prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
     void clearMemory();
 
 private:

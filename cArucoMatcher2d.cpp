@@ -86,13 +86,18 @@ ArucoMatcher2D::init_contours() {
     }
 }
 
+bool
+ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame) {
+
+    return true;
+}
+
 // x, y, phi relative to image SC.
 // Rough estimation by standard library (Aruco lib).
 bool
-ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
+ArucoMatcher2D::estimate_pose(std::vector<int> & ids, std::vector<std::vector<cv::Point2f>> & corners, std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
     // Find Aruco marker on image;
-    std::vector<int> ids;
-    std::vector<std::vector<cv::Point2f>> corners;
+
     cv::aruco::detectMarkers(shot, dictionary, corners, ids);
     if(ids.empty())
         return false;
@@ -109,8 +114,12 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 }
 
 ImgArray<float>
-ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
-    QImage qimg_planar;
+ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage cut_shot, qimg_planar;
+
+    // Cut image by corners.
+    QRect cornersRect = rectangleFromCorners(corners).marginsAdded(QMargins(ROI_MARGIN, ROI_MARGIN, ROI_MARGIN, ROI_MARGIN));
+    cut_shot = shot.copy(cornersRect);
 
     // Convert Rodrigues to Quaterninon.
     QQuaternion quat = rvec2QQaternion(rvec);
@@ -121,12 +130,18 @@ ArucoMatcher2D::prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec
     // Apply affine transform.
     // Transform image: rotate with estimated by Aruco lib quaternion.
     QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
-    qimg_planar = ApplyTransform(shot, Tr, EulerAngles);
+    qimg_planar = ApplyTransform(cut_shot, Tr, EulerAngles);
+    // QRect cornersRect_tr = ApplyTransform(cornersRect, Tr, EulerAngles);
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
     ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
     create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+
+    if(SHOW) {
+        // Show transformed image.
+        cv::imshow("frame_planar", ocv::qt::qimage_to_mat_cpy(qimg_planar, false));
+    }
 
     if(DEBUG) {
         // Save image.
@@ -165,6 +180,8 @@ ArucoMatcher2D::run() {
     while (inputVideo.grab()) {
         cv::Mat image, imageCopy, EulerAngles;
         std::vector<cv::Vec3d> rvecs, tvecs;
+        std::vector<int> ids;
+        std::vector<std::vector<cv::Point2f>> corners;
         QImage qImageCopy, qImg_planar_grad;
 
         inputVideo.retrieve(image);
@@ -172,8 +189,8 @@ ArucoMatcher2D::run() {
         qImageCopy = ocv::qt::mat_to_qimage_cpy(image, false);
 
         // Estimate pose with Aruco lib.
-        if(estimate_pose(rvecs, tvecs, imageCopy)) {
-            ImgArray<float> img_arr = prepareShot2Matcher(rvecs.front(), tvecs.front(), qImageCopy);
+        if(estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
+            ImgArray<float> img_arr = prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
 
             // Run Accurate matcher -> estimate delta rotation shift.
             // estimate_poseAccurate

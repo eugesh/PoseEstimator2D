@@ -15,6 +15,7 @@ typedef std::vector<QPoint> Contour;
 typedef std::vector<INT> SparseContour;
 
 static const INT templates_size=32;
+static const INT ROI_MARGIN=16;
 static const float PITCH_STEP=0.5f; // [degree]
 static const float ROLL_STEP=0.5f; // [degree]
 static const float YAW_STEP=0.5f; // [degree]
@@ -23,6 +24,7 @@ static const float PITCH_MAX=5.0f; // [degree]
 static const float ROLL_MAX=5.0f; // [degree]
 static const float YAW_MAX=5.0f; // [degree]
 
-static const bool DEBUG=true;
+static const bool SHOW=true;
+static const bool DEBUG=false;
 static const bool DRAW=true;
 static const int def_dict = cv::aruco::DICT_5X5_50;

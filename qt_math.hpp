@@ -35,6 +35,18 @@ QImage sobel(QImage const& img) {
     return grad;
 }
 
+QMatrix4x4
+getAffineMatrix (float x, float y, float z, float phi_x, float phi_y, float phi_z) {
+    QMatrix4x4 matr;
+
+    matr.translate(x, y, z);
+    matr.rotate(phi_x, 1, 0, 0);
+    matr.rotate(phi_y, 0, 1, 0);
+    matr.rotate(phi_z, 0, 0, 1);
+
+    return matr;
+}
+
 QTransform
 getAffineTransform (float x, float y, float z, float phi_x, float phi_y, float phi_z) {
     QMatrix4x4 matr;
@@ -78,4 +90,15 @@ ApplyTransform(QImage const& img, QVector3D t, QVector3D R) {
     outImg = img.transformed(tf);
 
     return outImg;
+}
+
+QRect
+ApplyTransform(QRect const& rect, QVector3D t, QVector3D R) {
+    QRect outRect;
+
+    QMatrix4x4 matr = getAffineMatrix (t.x(), t.y(), t.z(), R.x(), R.y(), R.z());
+
+    outRect = matr.mapRect(rect);
+
+    return outRect;
 }

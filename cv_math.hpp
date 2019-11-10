@@ -5,6 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <QQuaternion>
+#include <QRect>
 
 
 inline float SIGN(float x) {
@@ -185,5 +186,29 @@ QQuaternion rvec2QQaternion (cv::Vec3d rvec) {
 }
 // QQuaternion QQuaternion::fromAxisAndAngle(const QVector3D &axis, float angle)
 // Creates a normalized quaternion that corresponds to rotating through angle degrees about the specified 3D axis.
+
+
+QRect
+rectangleFromCorners(std::vector<cv::Point2f> corners) {
+    QPoint leftTop, bottomRight;
+    int leftMin=std::numeric_limits<int>::max(), topMin=std::numeric_limits<int>::max(), rightMax=0, bottomMax=0;
+
+    for(int i=0; i < corners.size(); ++i) {
+        if(corners.at(i).x < leftMin) {
+            leftMin = corners.at(i).x;
+        }
+        if(corners.at(i).x > rightMax) {
+            rightMax = corners.at(i).x;
+        }
+        if(corners.at(i).y > bottomMax) {
+            bottomMax = corners.at(i).y;
+        }
+        if(corners.at(i).y < topMin) {
+            topMin = corners.at(i).y;
+        }
+    }
+
+    return QRect(QPoint(leftMin, topMin), QPoint(rightMax, bottomMax));
+}
 
 #endif // CV_MATH_HPP
