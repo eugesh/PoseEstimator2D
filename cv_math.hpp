@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <QQuaternion>
 #include <QRect>
+#include <QPolygon>
 
 
 inline float SIGN(float x) {
@@ -209,6 +210,33 @@ rectangleFromCorners(std::vector<cv::Point2f> corners) {
     }
 
     return QRect(QPoint(leftMin, topMin), QPoint(rightMax, bottomMax));
+}
+
+QPolygon polygonConverter (std::vector<cv::Point2f> corners) {
+    QVector<QPoint> points;
+
+    for(int i=0; i < corners.size(); ++i) {
+        points.push_back(QPoint(corners.at(i).x, corners.at(i).y));
+    }
+
+    return QPolygon(points);
+}
+
+QPoint center_by_diagonals_intersection(std::vector<cv::Point2f> corners) {
+    auto x1 = corners.at(0).x;
+    auto y1 = corners.at(0).y;
+    auto x3 = corners.at(2).x;
+    auto y3 = corners.at(2).y;
+    auto x2 = corners.at(1).x;
+    auto y2 = corners.at(1).y;
+    auto x4 = corners.at(3).x;
+    auto y4 = corners.at(3).y;
+    auto Cx = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
+         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+    auto Cy = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
+         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+    return QPoint(Cx, Cy);
 }
 
 #endif // CV_MATH_HPP

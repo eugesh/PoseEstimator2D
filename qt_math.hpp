@@ -98,7 +98,9 @@ ApplyTransform(QRect const& rect, QVector3D t, QVector3D R) {
 
     QMatrix4x4 matr = getAffineMatrix (t.x(), t.y(), t.z(), R.x(), R.y(), R.z());
 
-    outRect = matr.mapRect(rect);
+    outRect = rect.translated(t.x(), t.y());
+
+    outRect = matr.mapRect(outRect);
 
     return outRect;
 }

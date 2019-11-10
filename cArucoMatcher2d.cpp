@@ -130,7 +130,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
     // Apply affine transform.
     // Transform image: rotate with estimated by Aruco lib quaternion.
     QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
-    qimg_planar = ApplyTransform(cut_shot, Tr, EulerAngles);
+    qimg_planar = ApplyTransform(cut_shot, QVector3D(0,0,0), EulerAngles);
     // QRect cornersRect_tr = ApplyTransform(cornersRect, Tr, EulerAngles);
 
     // Apply Sobel mask.
