@@ -216,6 +216,9 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
                 img_tmp.copyTo(img_tmp_copy);
         // cv::aruco::drawDetectedMarkers(img_tmp_copy, new_corners);
         cv::line(img_tmp, new_corners[0], new_corners[1], cv::Scalar( 255 ), 3);
+        cv::line(img_tmp, new_corners[1], new_corners[2], cv::Scalar( 255 ), 3);
+        cv::line(img_tmp, new_corners[2], new_corners[3], cv::Scalar( 255 ), 3);
+        cv::line(img_tmp, new_corners[3], new_corners[0], cv::Scalar( 255 ), 3);
         cv::imshow("frame_planar", img_tmp);
     }
 
