@@ -113,13 +113,74 @@ ArucoMatcher2D::estimate_pose(std::vector<int> & ids, std::vector<std::vector<cv
     return true;
 }
 
+/**
+ * @brief ArucoMatcher2D::rectify_corners
+ * Transform markers coordinates by rvec,tvec transformation.
+ * @param corners
+ * @param rvec
+ * @param tvec
+ * @param shot
+ * @return
+ */
+std::vector<cv::Point2f>
+ArucoMatcher2D::rectify_corners(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot, QImage const& shot_new) {
+    std::vector<cv::Point2f> new_corners, corners_c = corners, corners_c_m;
+
+    // Center of image;
+    QPoint C_shot_pix = QPoint(shot.width() / 2, shot.height() / 2);
+    cv::Point2f C_shot_pix_cv = cv::Point2f(shot.width() / 2, shot.height() / 2);
+
+    QPoint C_shot_new_pix = QPoint(shot_new.width() / 2, shot_new.height() / 2);
+    cv::Point2f C_shot_new_pix_cv = cv::Point2f(shot_new.width() / 2, shot_new.height() / 2);
+
+    // Find center of marker.
+    QPoint C_marker_pix = center_by_diagonals_intersection(corners);
+    cv::Point2f C_marker_pix_cv = center_by_diagonals_intersection_cv(corners);
+
+    // Distance between marker and shot centers in pixels
+    double pix_dist = std::hypot(C_shot_pix_cv.x - C_marker_pix_cv.x, C_shot_pix_cv.y - C_marker_pix_cv.y);
+
+    // Distance in meters
+    double dist_meters = std::hypot(tvec[0], tvec[1]);
+
+    // Find out pixel size in meters (marker_size)
+    double dpm = pix_dist / dist_meters; // Dots per meter.
+
+    // Move marker's pixel coordinates to the center.
+    for(int i=0; i < corners.size(); ++i)
+        corners_c[i] -= C_shot_pix_cv;
+
+    // Convert pixel coordinates to meters.
+    for(int i=0; i < corners.size(); ++i)
+        corners_c_m.push_back(corners_c[i] / dpm);
+
+    // Transform marker's coordinates to planar image position -> new_corners.
+    cv::Vec3d vec0={0,0,0};
+    for(int i=0; i < corners_c_m.size(); ++i) {
+        new_corners.push_back( qt_math::ApplyTransform_cv(corners_c_m[i], vec0, rvec) );
+    }
+
+    // Convert meters to pixel coordinates.
+    for(int i=0; i < corners.size(); ++i)
+        new_corners[i] = new_corners[i] * dpm;
+
+    // Move marker's pixel coordinates back shot's SC.
+    for(int i=0; i < corners.size(); ++i)
+        new_corners[i] += C_shot_new_pix_cv;
+
+    return new_corners;
+}
+
 ImgArray<float>
-ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
-    QImage cut_shot, qimg_planar;
+ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat shot_cv, QImage const& shot) {
+    QImage qimg_planar; //cut_shot
 
     // Cut image by corners.
-    QRect cornersRect = rectangleFromCorners(corners).marginsAdded(QMargins(ROI_MARGIN, ROI_MARGIN, ROI_MARGIN, ROI_MARGIN));
-    cut_shot = shot.copy(cornersRect);
+    // QRect cornersRect = rectangleFromCorners(corners).marginsAdded(QMargins(ROI_MARGIN, ROI_MARGIN, ROI_MARGIN, ROI_MARGIN));
+    // cut_shot = shot.copy(cornersRect);
+
+    // Estimate
+
 
     // Convert Rodrigues to Quaterninon.
     QQuaternion quat = rvec2QQaternion(rvec);
@@ -130,7 +191,17 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
     // Apply affine transform.
     // Transform image: rotate with estimated by Aruco lib quaternion.
     QVector3D Tr = QVector3D(tvec[0], tvec[1], tvec[2]);
-    qimg_planar = ApplyTransform(cut_shot, QVector3D(0,0,0), EulerAngles);
+    qimg_planar = ApplyTransform(shot, QVector3D(0,0,0), EulerAngles);
+
+    // Transform corners' coordinates.
+    // First, translate frame to the center of SC.
+    /*QPolygon new_polygon;
+    for(int i=0; i < corners.size(); ++i) {
+        new_polygon.append(qt_math::ApplyTransform(corners.at(i), QVector3D(0,0,0), EulerAngles));
+    }
+    std::vector<cv::Point2f> new_corners = qt_math::polygon2vector(new_polygon);*/
+    std::vector<cv::Point2f> new_corners = rectify_corners(corners, rvec, tvec, shot, qimg_planar);
+
     // QRect cornersRect_tr = ApplyTransform(cornersRect, Tr, EulerAngles);
 
     // Apply Sobel mask.
@@ -140,7 +211,12 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
 
     if(SHOW) {
         // Show transformed image.
-        cv::imshow("frame_planar", ocv::qt::qimage_to_mat_cpy(qimg_planar, false));
+        cv::Mat img_tmp = ocv::qt::qimage_to_mat_cpy(qimg_planar, false);
+        cv::Mat img_tmp_copy;
+                img_tmp.copyTo(img_tmp_copy);
+        // cv::aruco::drawDetectedMarkers(img_tmp_copy, new_corners);
+        cv::line(img_tmp, new_corners[0], new_corners[1], cv::Scalar( 255 ), 3);
+        cv::imshow("frame_planar", img_tmp);
     }
 
     if(DEBUG) {
@@ -190,7 +266,7 @@ ArucoMatcher2D::run() {
 
         // Estimate pose with Aruco lib.
         if(estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
-            ImgArray<float> img_arr = prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
+            ImgArray<float> img_arr = prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), imageCopy, qImageCopy);
 
             // Run Accurate matcher -> estimate delta rotation shift.
             // estimate_poseAccurate

@@ -92,6 +92,28 @@ ApplyTransform(QImage const& img, QVector3D t, QVector3D R) {
     return outImg;
 }
 
+QPoint
+ApplyTransform(QPoint const& point, QVector3D t, QVector3D R) {
+    QPoint out;
+
+    QTransform tf = getAffineTransform(t, R);
+
+    out = tf.map(point);
+
+    return out;
+}
+
+QPointF
+ApplyTransform(QPointF const& point, QVector3D t, QVector3D R) {
+    QPointF out;
+
+    QTransform tf = getAffineTransform(t, R);
+
+    out = tf.map(point);
+
+    return out;
+}
+
 QRect
 ApplyTransform(QRect const& rect, QVector3D t, QVector3D R) {
     QRect outRect;

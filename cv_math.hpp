@@ -108,7 +108,7 @@ cv::Mat mRot2Quat(const cv::Mat& m) {
     return np.array([x, y, z])
 } */
 
-cv::Mat rot2euler(const cv::Mat & rotationMatrix)
+cv::Mat rotMatrix2Euler(const cv::Mat & rotationMatrix)
 {
     cv::Mat euler(3, 1, CV_64F);
 
@@ -153,7 +153,7 @@ rvec2Euler (cv::Vec3d rvec) {
 
     cv::Rodrigues(rvec, rot_matrix);
     // cv::Mat quat = mRot2Quat(rot_matrix);
-    EulerAngles = rot2euler(rot_matrix);
+    EulerAngles = rotMatrix2Euler(rot_matrix);
 
     return EulerAngles;
 }
@@ -165,12 +165,13 @@ rvec2Quaternion (cv::Vec3d rvec) {
 
     cv::Rodrigues(rvec, rot_matrix);
     cv::Mat quat = mRot2Quat(rot_matrix);
-    // EulerAngles = rot2euler(rot_matrix);
+    // EulerAngles = rotMatrix2Euler(rot_matrix);
 
     return quat;
 }
 
-QQuaternion rvec2QQaternion (cv::Vec3d rvec) {
+QQuaternion
+rvec2QQaternion (cv::Vec3d rvec) {
     QQuaternion quat;
 
     double xr = rvec[0];
@@ -225,10 +226,10 @@ QPolygon polygonConverter (std::vector<cv::Point2f> corners) {
 QPoint center_by_diagonals_intersection(std::vector<cv::Point2f> corners) {
     auto x1 = corners.at(0).x;
     auto y1 = corners.at(0).y;
-    auto x3 = corners.at(2).x;
-    auto y3 = corners.at(2).y;
-    auto x2 = corners.at(1).x;
-    auto y2 = corners.at(1).y;
+    auto x3 = corners.at(1).x;
+    auto y3 = corners.at(1).y;
+    auto x2 = corners.at(2).x;
+    auto y2 = corners.at(2).y;
     auto x4 = corners.at(3).x;
     auto y4 = corners.at(3).y;
     auto Cx = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
@@ -238,5 +239,95 @@ QPoint center_by_diagonals_intersection(std::vector<cv::Point2f> corners) {
 
     return QPoint(Cx, Cy);
 }
+
+cv::Point2f center_by_diagonals_intersection_cv(std::vector<cv::Point2f> corners) {
+    auto x1 = corners.at(0).x;
+    auto y1 = corners.at(0).y;
+    auto x3 = corners.at(1).x;
+    auto y3 = corners.at(1).y;
+    auto x2 = corners.at(2).x;
+    auto y2 = corners.at(2).y;
+    auto x4 = corners.at(3).x;
+    auto y4 = corners.at(3).y;
+    auto Cx = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
+         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+    auto Cy = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
+         ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+    return cv::Point2f(Cx, Cy);
+}
+
+float
+distance_from_points(cv::Point2f p1, cv::Point2f p2) {
+    float dist=0;
+
+
+
+    return dist;
+}
+
+/**
+ * @brief estimate_dpm_for_marker
+ * Rougly estimates dots(pixels) per meter for Aruco marker.
+ * @param corners
+ * @param marker_size
+ * @return
+ */
+float
+estimate_dpm_for_marker(std::vector<cv::Point2f> corners, float marker_size) {
+
+}
+
+#ifdef QT_CORE_LIB
+#include "qt_math.hpp"
+
+namespace qt_math {
+
+QVector3D rvec2Euler(cv::Vec3d const& rvec) {
+    // Convert Rodrigues to Quaterninon.
+    QQuaternion quat = rvec2QQaternion(rvec);
+
+    // Convert quaternion to Euler.
+    return quat.toEulerAngles();
+}
+
+QPoint
+ApplyTransform(cv::Point2f point, QVector3D t, QVector3D R) {
+    return ApplyTransform(QPoint(point.x, point.y), t, R);
+}
+
+cv::Point2f
+ApplyTransform_cv(cv::Point2f point, QVector3D t, QVector3D R) {
+    QPoint qpoint_out = ApplyTransform(QPoint(point.x, point.y), t, R);
+
+    cv::Point2f out = cv::Point2f(qpoint_out.x(), qpoint_out.y());
+
+    return out;
+}
+
+cv::Point2f
+ApplyTransform_cv(cv::Point2f point, cv::Vec3d const& tvec, cv::Vec3d const& rvec) {
+    QVector3D R = rvec2Euler(rvec);
+    QVector3D t = QVector3D(tvec[0], tvec[1], tvec[2]);
+
+    QPointF qpoint_out = ApplyTransform(QPointF(point.x, point.y), t, R);
+
+    cv::Point2f out = cv::Point2f(qpoint_out.x(), qpoint_out.y());
+
+    return out;
+}
+
+std::vector<cv::Point2f> polygon2vector (QPolygon polygon) {
+    std::vector<cv::Point2f> vecPoints;
+
+    for(int i=0; i < polygon.count(); ++i) {
+        vecPoints.push_back(cv::Point2f(polygon[i].x(), polygon[i].y()));
+    }
+
+    return vecPoints;
+}
+
+}
+#endif
 
 #endif // CV_MATH_HPP
