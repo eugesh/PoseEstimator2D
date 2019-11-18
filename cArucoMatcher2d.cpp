@@ -173,7 +173,7 @@ ArucoMatcher2D::rectify_corners(std::vector<cv::Point2f> corners, cv::Vec3d cons
 
 ImgArray<float>
 ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat shot_cv, QImage const& shot) {
-    QImage qimg_planar; //cut_shot
+    QImage qimg_planar, cut_shot;
 
     // Cut image by corners.
     // QRect cornersRect = rectangleFromCorners(corners).marginsAdded(QMargins(ROI_MARGIN, ROI_MARGIN, ROI_MARGIN, ROI_MARGIN));
@@ -195,21 +195,18 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
 
     // Transform corners' coordinates.
     // First, translate frame to the center of SC.
-    /*QPolygon new_polygon;
-    for(int i=0; i < corners.size(); ++i) {
-        new_polygon.append(qt_math::ApplyTransform(corners.at(i), QVector3D(0,0,0), EulerAngles));
-    }
-    std::vector<cv::Point2f> new_corners = qt_math::polygon2vector(new_polygon);*/
     std::vector<cv::Point2f> new_corners = rectify_corners(corners, rvec, tvec, shot, qimg_planar);
 
-    // QRect cornersRect_tr = ApplyTransform(cornersRect, Tr, EulerAngles);
+    // Cut shot inside corners.
+    QRect bound_rect = rectangleFromCorners(new_corners);
+    cut_shot = qimg_planar.copy(bound_rect);
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
     ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
     create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
 
-    if(SHOW) {
+    if(DRAW) {
         // Show transformed image.
         cv::Mat img_tmp = ocv::qt::qimage_to_mat_cpy(qimg_planar, false);
         cv::Mat img_tmp_copy;
@@ -230,6 +227,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
         img_ar.toQImage().save("Before_grad.png");
         img_ar_grad.toQImage().save("GRADIENT.png");
         qimg_planar.save("planar.png");
+        cut_shot.save("Cut_shot.png");
     }
 
     return img_ar_grad;

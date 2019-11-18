@@ -24,7 +24,7 @@ static const float PITCH_MAX=5.0f; // [degree]
 static const float ROLL_MAX=5.0f; // [degree]
 static const float YAW_MAX=5.0f; // [degree]
 
-static const bool SHOW=true;
-static const bool DEBUG=false;
+// static const bool SHOW=true;
+static const bool DEBUG=true;
 static const bool DRAW=true;
 static const int def_dict = cv::aruco::DICT_5X5_50;
