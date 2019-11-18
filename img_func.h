@@ -16,6 +16,10 @@ private:
   int w;
   int h;
 public:
+  ImgArray() {
+      Zero();
+  }
+
   ImgArray(QPixmap map,bool negative=0) {
      // printf("ImgArray constructor\n");
      // QTime Timer2 ;
@@ -72,6 +76,12 @@ public:
      // fprintf(stdout," time of creation of the imgArray = %lf seconds\n", double(Timer2.elapsed()) / 1000. ) ;
   };
   
+  void Zero() {
+      Array = nullptr;
+      w=0;
+      h=0;
+  }
+
   ~ImgArray( ) {
     // printf("ImgArray destructor1\n");
     delete[] Array;

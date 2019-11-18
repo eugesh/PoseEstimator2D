@@ -38,5 +38,7 @@ cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
     // Copy memory.
     mem2d = cudaMemcpy(mapGPU, imgArr.getArray(), sizeof(IMGTYPE) * imgArr.width() * imgArr.height(), cudaMemcpyHostToDevice);
 
+    cudaDeviceSynchronize();
+
     return 0;
 }

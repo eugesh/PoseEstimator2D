@@ -171,7 +171,7 @@ ArucoMatcher2D::rectify_corners(std::vector<cv::Point2f> corners, cv::Vec3d cons
     return new_corners;
 }
 
-ImgArray<float>
+ImgArray<IMGTYPE>
 ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat shot_cv, QImage const& shot) {
     QImage qimg_planar, cut_shot;
 
@@ -203,8 +203,8 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
 
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
-    ImgArray<float> img_ar(qimg_planar), img_ar_grad(qimg_planar);
-    create_matr_gradXY(img_ar_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
+    ImgArray<IMGTYPE> img_ar(cut_shot), m_img_arr_grad(cut_shot);
+    create_matr_gradXY(m_img_arr_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
 
     if(DRAW) {
         // Show transformed image.
@@ -221,16 +221,16 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
 
     if(DEBUG) {
         // Save image.
-        float range = (img_ar_grad.max() - img_ar_grad.min());
-        img_ar_grad = img_ar_grad * float(255) / range;
+        float range = (m_img_arr_grad.max() - m_img_arr_grad.min());
+        m_img_arr_grad = m_img_arr_grad * float(255) / range;
         range = (img_ar.max() - img_ar.min());
         img_ar.toQImage().save("Before_grad.png");
-        img_ar_grad.toQImage().save("GRADIENT.png");
+        m_img_arr_grad.toQImage().save("GRADIENT.png");
         qimg_planar.save("planar.png");
         cut_shot.save("Cut_shot.png");
     }
 
-    return img_ar_grad;
+    return m_img_arr_grad;
 }
 
 bool
@@ -267,10 +267,11 @@ ArucoMatcher2D::run() {
 
         // Estimate pose with Aruco lib.
         if(estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
-            ImgArray<float> img_arr = prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), imageCopy, qImageCopy);
+            prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), imageCopy, qImageCopy);
 
             // Run Accurate matcher -> estimate delta rotation shift.
             // estimate_poseAccurate
+            m_accMatcher.estimate(rvecs.front(), tvecs.front(), m_img_arr_grad);
         }
 
         // Draw marker: compare Aruco and Accurate matcher results.

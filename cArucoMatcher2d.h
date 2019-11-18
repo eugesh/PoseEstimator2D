@@ -43,7 +43,7 @@ private:
     bool estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot);
     // cv::Mat prepareShot2Matcher(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat frame); // Implement
     // QImage prepareShot2Matcher(cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot);
-    ImgArray<float> prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat , QImage const& shot);
+    ImgArray<IMGTYPE> prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat , QImage const& shot);
     static std::vector<cv::Point2f> rectify_corners(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot, QImage const& shot_new);
     void clearMemory();
 
@@ -51,6 +51,7 @@ private:
     cv::Ptr<cv::aruco::Dictionary> dictionary;
     Vector<int> m_ids_vec;
     INT m_template_size;
+    ImgArray<IMGTYPE> m_img_arr_grad;
 
     constexpr static float Marker_size = 0.1f; // [m]
     IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;
