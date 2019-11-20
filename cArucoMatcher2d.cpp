@@ -64,10 +64,15 @@ ArucoMatcher2D::init_contours() {
         print_contours(dictionary, m_template_size, "5x5");
 
     // Convert cv::Mat to QImage
-    QImage q_marker_in, q_marker_tr;
+    QImage q_marker_in, q_marker_in_cut, q_marker_tr;
     q_marker_in = ocv::qt::mat_to_qimage_cpy(marker, false);
 
+    // ApplyTransform requires coloured image.
     q_marker_in = q_marker_in.convertToFormat(QImage::Format::Format_ARGB32_Premultiplied).mirrored();
+
+    // Cut template close to "bit" part, no black part.
+    QRect boundRect = boundingRect(q_marker_in).marginsAdded(QMargins(1,1,1,1));
+    q_marker_in_cut = q_marker_in.copy(boundRect);
 
     m_cbg.clearAll();
     m_cbg.initAll();
@@ -76,7 +81,7 @@ ArucoMatcher2D::init_contours() {
     for(float pitch = -PITCH_MAX; pitch < PITCH_MAX; pitch += PITCH_STEP) {
         for(float roll = -ROLL_MAX; roll < ROLL_MAX; roll += ROLL_STEP) {
             for(float yaw = - YAW_MAX; yaw < YAW_MAX; yaw += YAW_STEP) {
-                q_marker_tr = ApplyTransform(q_marker_in, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
+                q_marker_tr = ApplyTransform(q_marker_in_cut, QVector3D(0,0,0), QVector3D(pitch, roll, yaw));
                 m_cbg.append(q_marker_tr);
 
                 if(DEBUG)

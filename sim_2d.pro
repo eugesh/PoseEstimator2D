@@ -91,6 +91,7 @@ HEADERS += \
     cudaWrapper.h \
     iAccurateMatcher.h \
     i_ContoursMatcher.h \
+    img_func.h \
     mainwindow.h \
     #opticalflowmatcher2d.cpp
     mat_qimage.hpp \

@@ -28,11 +28,65 @@ QImage sobel(QImage const& img) {
 
     for(int i=0; i < img.height(); ++i) {
         for(int j=0; j < img.width(); ++j) {
-
+            // ToDo, see create_matr_gradXY
         }
     }
 
     return grad;
+}
+
+QRect
+boundingRect(QImage const& bw_img) {
+    int leftBound = bw_img.width();
+    int rightBound = 0;
+    int topBound = bw_img.height();
+    int bottomBound = 0;
+
+    bool stop = false;
+
+    for (int i=0; i < bw_img.height() && !stop; ++i) {
+        for(int j=0; j < bw_img.width() && !stop; ++j) {
+            if(qGray(bw_img.pixel(j, i)) > 0) {
+                topBound=i;
+                stop = true;
+            }
+        }
+    }
+
+    stop = false;
+
+    for(int j=0; j < bw_img.width() && !stop; ++j) {
+        for (int i=0; i < bw_img.height() && !stop; ++i) {
+            if(qGray(bw_img.pixel(j, i)) > 0) {
+                leftBound=j;
+                stop = true;
+            }
+        }
+    }
+
+    stop = false;
+
+    for (int i=bw_img.height()-1; i >= 0 && !stop; --i) {
+        for(int j=0; j < bw_img.width() && !stop; ++j) {
+            if(qGray(bw_img.pixel(j, i)) > 0) {
+                bottomBound=i - topBound;
+                stop = true;
+            }
+        }
+    }
+
+    stop = false;
+
+    for(int j=bw_img.width()-1; j >= 0 && !stop; --j) {
+        for (int i=0; i < bw_img.height() && !stop; ++i) {
+            if(qGray(bw_img.pixel(j, i)) > 0) {
+                rightBound=j-leftBound;
+                stop = true;
+            }
+        }
+    }
+
+    return QRect(leftBound, topBound, rightBound, bottomBound);
 }
 
 QMatrix4x4
