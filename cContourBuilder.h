@@ -50,6 +50,8 @@ public:
     void contoursSetup();
     void initAll();
 
+    Vector<SparseContour> get_sparseContoursVec() { return  sparseContoursVec; }
+
 private:
     int prepareMemoryCPU();
     int allocateMemoryGPU();

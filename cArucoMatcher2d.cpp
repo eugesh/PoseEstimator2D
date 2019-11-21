@@ -89,6 +89,8 @@ ArucoMatcher2D::init_contours() {
             }
         }
     }
+
+    m_accMatcher.setContoursBuilder(m_cbg);
 }
 
 bool
@@ -206,7 +208,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
     QRect bound_rect = rectangleFromCorners(new_corners);
     cut_shot = qimg_planar.copy(bound_rect);
 
-    // Scale block to fit template size + margin.
+    // Scale block to fit template size + margin.   ToDo: generate a range of scaled images.
     if(cut_shot.width() < 1)
         return ImgArray<IMGTYPE>();
 

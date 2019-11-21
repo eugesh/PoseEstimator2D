@@ -137,6 +137,9 @@ public:
             for(int j=0; j < w; ++j) {
                 int val = (int)Array[i * w + j];
 
+                if(val > 255)
+                    val = 255;
+
                 img.setPixel(j, i, val);
             }
         }

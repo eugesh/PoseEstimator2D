@@ -405,6 +405,8 @@ __device__ float device_calc_mean_sparse (IMGTYPE *pImg, MAPTYPE *pContour_spars
     int shiftX, shiftY;
     shiftX = (int)((float)ImgW / 2 - (float)RX / 2 + (float)(ix % RX) - (float)W / 2);
     shiftY = (int)((float)ImgH / 2 - (float)RY / 2 + (float)(ix / RX) - (float)H / 2);
+    // shiftX = (int) ((float) ImgW / 2 - (float) RX + (ix % (RX * 2 / step_r)) * step_r - (float) t_w / 2 );
+    // shiftY = (int) ((float) ImgH / 2 - (float) RY + (ix / (RX * 2 / step_r)) * step_r - (float) t_h / 2 );
 
     for(int i=0; i < pMap_sparse_cur_size; i++) {
         int x = pContour_sparse[shift + i] % W; // coords of contours elements in map SC

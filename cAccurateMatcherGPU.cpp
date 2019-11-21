@@ -3,13 +3,108 @@
 
 #include "cAccurateMatcherGPU.h"
 
-cAccurateMatcherGPU::cAccurateMatcherGPU()
-{
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int create_matr_of_means_sparse(int NUM_BLOCK_X,  int NUM_BLOCK_Y,
+                                int NUM_THREAD_X, int NUM_THREAD_Y,
+                                IMGTYPE *pImg,    MAPTYPE *arMap,
+                                int *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
+                                int *arW,         int *arH,
+                                int *shiftAr,     float *pTable,
+                                int ImgW,         int ImgH,
+                                float betta,      int RX,
+                                int RY,           int isadd,
+                                MAPTYPE value1,   MAPTYPE value2,
+                                float alpha);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+cAccurateMatcherGPU::cAccurateMatcherGPU() {
+    Zero();
+
+    D_ROI_X = 2 * ROI_MARGIN / ROI_STEP;
+    D_ROI_Y = 2 * ROI_MARGIN / ROI_STEP;
+}
+
+int
+cAccurateMatcherGPU::Clear() {
+
+    if(m_pTable)
+        delete[] m_pTable;
+
+    if(m_pTableGPU != nullptr)
+        cudaFree(m_pTableGPU);
+
+    if(m_shotGPU != nullptr)
+        cudaFree(m_shotGPU);
+
+    Zero();
+
+    return 0;
+}
+
+int
+cAccurateMatcherGPU::Zero() {
+    m_pTable=nullptr;
+
+    m_pTableGPU=nullptr;
+    m_shotGPU=nullptr;
+
+    return 0;
+}
+
+int
+cAccurateMatcherGPU::init_memory() {
+    m_pTable = new float[m_NUM_BLOCK_Y * m_NUM_THREAD_X];
+
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_pTableGPU), sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X);
+
+    return 0;
+}
+
+void
+cAccurateMatcherGPU::setContoursBuilder(cContoursBuilderGPU const& cbg) {
+    m_cbg = cbg;
+
+    Clear();
+
+    m_NUM_BLOCK_X = 1;
+    m_NUM_BLOCK_Y = int ( ceil( double( D_ROI_X * D_ROI_Y )));  // / BLOCK_SIZE)));
+    m_NUM_THREAD_X = m_cbg.get_sparseContoursVec().size(); //BLOCK_SIZE; //maxW*maxH;
+    m_NUM_THREAD_Y = 1;
+
+    init_memory();
 }
 
 cAccurateMatcherGPU::~cAccurateMatcherGPU() {
 
+}
+
+int
+cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
+    // Allocate memory.
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_shotGPU), sizeof(IMGTYPE) * imgArr.width() * imgArr.height());
+
+    // Copy memory.
+    mem2d = cudaMemcpy(m_shotGPU, imgArr.getArray(), sizeof(IMGTYPE) * imgArr.width() * imgArr.height(), cudaMemcpyHostToDevice);
+
+    cudaDeviceSynchronize();
+
+    return 0;
+}
+
+int
+cAccurateMatcherGPU::getTableFromGPU() {
+    cudaError_t mem2d = cudaMemcpy(m_pTable, m_pTableGPU, sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X, cudaMemcpyDeviceToHost);
+
+    return 0;
 }
 
 void
@@ -23,33 +118,57 @@ cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, cv::Mat frame)
 
 }
 
-void
-cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, const ImgArray<IMGTYPE> & imgArr) {
-    // Translate (copy) Gradient of current shot to GPU.
-    translateShot2GPU(imgArr);
-
+int
+cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
     // Calculate Block size and Threads per Block numbers.
     ROI_MARGIN; // Block y size
     // N_templates -> num of xThreads
 
     // Run matching process on GPU
+    float betta = 1; // alphaContour * (-1);
+    int isadd = 0;
+    int value1 = 1; // OBJECT_VALUE;
+    int value2 = 0; // SHADOW_VALUE;
+    float alpha = 0.7;
 
-    // Transfer table of mean values device->host
+    int error_create_matr =
+        create_matr_of_means_sparse(m_NUM_BLOCK_X, m_NUM_BLOCK_Y, m_NUM_THREAD_X, m_NUM_THREAD_Y,
+                                    m_shotGPU, m_cbg.getSparseContoursGPU(),
+                                    m_cbg.getSparceShiftsGPU(), // int *lengthAr_sparse,
+                                    m_cbg.getWGPU(), m_cbg.getHGPU(),
+                                    m_cbg.getShiftsGPU(), m_pTableGPU,
+                                    imgArr.width(), imgArr.height(),
+                                    betta, D_ROI_X, D_ROI_Y, isadd,
+                                    value1, value2, alpha);
 
-    // Find maximum.
-
-    // Emit quaternion.
-}
-
-int
-cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
-    // Allocate memory.
-    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&mapGPU), sizeof(IMGTYPE) * imgArr.width() * imgArr.height());
-
-    // Copy memory.
-    mem2d = cudaMemcpy(mapGPU, imgArr.getArray(), sizeof(IMGTYPE) * imgArr.width() * imgArr.height(), cudaMemcpyHostToDevice);
-
-    cudaDeviceSynchronize();
+    if(error_create_matr) {
+        printf("Error: create_matr_of_means3_sparse: cudaLaunch : Error message = %d\n", error_create_matr  ) ;
+        // clearMemory( );
+        // return ErrorCudaRun;
+    }
 
     return 0;
+}
+
+void
+cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, const ImgArray<IMGTYPE> & imgArr) {
+    // Translate (copy) Gradient of current shot to GPU.
+    translateShot2GPU(imgArr);
+
+    runMatching(imgArr);
+
+    // Transfer table of mean values device->host
+    getTableFromGPU();
+
+    // Find maximum.
+    float max=0.0f;
+    for(int i=0; i < m_NUM_BLOCK_Y * m_NUM_THREAD_X; ++i) {
+
+        if(m_pTable[i] > max)
+            max = m_pTable[i];
+    }
+
+    std::cout << "max value = " << max << std::endl;
+
+    // Emit quaternion.
 }
