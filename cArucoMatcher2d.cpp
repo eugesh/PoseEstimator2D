@@ -177,8 +177,8 @@ ArucoMatcher2D::rectify_corners(std::vector<cv::Point2f> corners, cv::Vec3d cons
 }
 
 ImgArray<IMGTYPE>
-ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, cv::Mat shot_cv, QImage const& shot) {
-    QImage qimg_planar, cut_shot;
+ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d const& rvec, cv::Vec3d const& tvec, QImage const& shot) {
+    QImage qimg_planar, cut_shot, cut_shot_scaled;
 
     // Cut image by corners.
     // QRect cornersRect = rectangleFromCorners(corners).marginsAdded(QMargins(ROI_MARGIN, ROI_MARGIN, ROI_MARGIN, ROI_MARGIN));
@@ -206,9 +206,17 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
     QRect bound_rect = rectangleFromCorners(new_corners);
     cut_shot = qimg_planar.copy(bound_rect);
 
+    // Scale block to fit template size + margin.
+    if(cut_shot.width() < 1)
+        return ImgArray<IMGTYPE>();
+
+    double scale = double(templates_size + 2*ROI_MARGIN) / double(cut_shot.width());
+    cut_shot_scaled = cut_shot.scaled(cut_shot.size() * scale);
+
     // Apply Sobel mask.
     // Apply sobel filter -> gradient.
-    ImgArray<IMGTYPE> img_ar(cut_shot), m_img_arr_grad(cut_shot);
+    ImgArray<IMGTYPE> img_ar(cut_shot_scaled);
+    m_img_arr_grad.setImage(cut_shot_scaled);
     create_matr_gradXY(m_img_arr_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
 
     if(DRAW) {
@@ -233,6 +241,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
         m_img_arr_grad.toQImage().save("GRADIENT.png");
         qimg_planar.save("planar.png");
         cut_shot.save("Cut_shot.png");
+        cut_shot_scaled.save("cut_shot_scaled.png");
     }
 
     return m_img_arr_grad;
@@ -272,7 +281,9 @@ ArucoMatcher2D::run() {
 
         // Estimate pose with Aruco lib.
         if(estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
-            prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), imageCopy, qImageCopy);
+
+            // Apply Transfrom
+            prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
 
             // Run Accurate matcher -> estimate delta rotation shift.
             // estimate_poseAccurate

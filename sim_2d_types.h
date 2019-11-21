@@ -16,6 +16,8 @@ typedef std::vector<INT> SparseContour;
 
 static const INT templates_size=32;
 static const INT ROI_MARGIN=16;
+static const INT ROI_STEP=1;
+#define BLOCK_SIZE 512
 static const float PITCH_STEP=0.5f; // [degree]
 static const float ROLL_STEP=0.5f; // [degree]
 static const float YAW_STEP=0.5f; // [degree]

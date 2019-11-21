@@ -24,10 +24,21 @@ cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, cv::Mat frame)
 }
 
 void
-cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, ImgArray<IMGTYPE> imgArr) {
+cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, const ImgArray<IMGTYPE> & imgArr) {
     // Translate (copy) Gradient of current shot to GPU.
     translateShot2GPU(imgArr);
 
+    // Calculate Block size and Threads per Block numbers.
+    ROI_MARGIN; // Block y size
+    // N_templates -> num of xThreads
+
+    // Run matching process on GPU
+
+    // Transfer table of mean values device->host
+
+    // Find maximum.
+
+    // Emit quaternion.
 }
 
 int

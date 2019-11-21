@@ -24,10 +24,10 @@ public:
      // printf("ImgArray constructor\n");
      // QTime Timer2 ;
      // Timer2.start() ;    
-     Array = nullptr;
+     Zero();
      w=map.width ();
      h=map.height();
-     if(map.isNull() || w*h <= 0)
+     if(map.isNull() || w*h < 4)
          return;
      Array=new T [w*h];
 
@@ -44,16 +44,16 @@ public:
      }    
      // fclose(fp);
      // fprintf(stdout,"The time of the create imgArray = %lf seconds\n", double(Timer2.elapsed()) / 1000. ) ;
-  };
+  }
 
   ImgArray(QImage map, bool negative=0) {
      // printf("ImgArray QImage constructor\n");
      // QTime Timer2 ;
      // Timer2.start() ;    
-     Array = nullptr;
+     Zero();
      w=map.width ();
      h=map.height();
-     if(map.isNull() || w*h <= 0)
+     if(map.isNull() || w*h < 4)
          return;
 
      Array=new T [w*h];
@@ -74,19 +74,52 @@ public:
      }    
       //fclose(fp);
      // fprintf(stdout," time of creation of the imgArray = %lf seconds\n", double(Timer2.elapsed()) / 1000. ) ;
-  };
+  }
   
+  void setImage(QImage map, bool negative=0) {
+    //Clear();
+    //Zero();
+
+    w=map.width ();
+    h=map.height();
+    if(map.isNull() || w*h < 4)
+        return;
+
+    Array=new T [w*h];
+    //FILE * fp;
+    //fp=fopen("D:/temp/files/touch/out_img_array.txt","w");
+                //printf("ImgArray QImage constructor 1\n");
+    for(int m=0; m<h; ++m) {
+       for(int n=0; n<w; ++n) {
+          if(!negative)
+             Array[m*w+n]=qGray(map.pixel(n,m));
+          else
+             Array[m*w+n]=255-qGray(map.pixel(n,m));
+             //printf("%f ", Array[m*w+n]);
+             //fprintf(fp,"%f ", Array[m*w+n]);
+              //printf("ImgArray QImage constructor 2 \n");
+       }
+       //fprintf(fp,"\n");
+    }
+  }
+
   void Zero() {
       Array = nullptr;
       w=0;
       h=0;
   }
 
+  void Clear() {
+      if(Array)
+          delete[] Array;
+      Zero();
+  }
+
   ~ImgArray( ) {
     // printf("ImgArray destructor1\n");
-    delete[] Array;
+    Clear();
     // printf("ImgArray destructor2\n");
-  };  
+  }
 public:
   int width ( ) const { return w ; }
   int height( ) const { return h ; }
@@ -186,7 +219,7 @@ public:
               //fprintf(fp,"%d ",imgArray[m*w+n]);
         //}
      return img;
-  }; 
+  }
 
 
  // ImgArray(QPixmap map,bool negative=0) {
