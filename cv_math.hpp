@@ -178,7 +178,7 @@ rvec2QQaternion (cv::Vec3d rvec) {
     double yr = rvec[1];
     double zr = rvec[2];
 
-    float theta = (float)(sqrt(xr*xr + yr*yr + zr*zr) * 180 / M_PI);
+    float theta = (float)(sqrt(xr*xr + yr*yr + zr*zr) * 180 / CV_PI);
     QVector3D axis = QVector3D(xr, yr, zr);
     // Quaternion rot = Quaternion.AngleAxis (theta, axis);
 
@@ -275,7 +275,9 @@ distance_from_points(cv::Point2f p1, cv::Point2f p2) {
  */
 float
 estimate_dpm_for_marker(std::vector<cv::Point2f> corners, float marker_size) {
+    float dpm = 1.0f;
 
+    return dpm;
 }
 
 #ifdef QT_CORE_LIB

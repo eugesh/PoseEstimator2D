@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <cstdint>
 #include <QPoint>
+#include <vector>
+
 #include <opencv2/aruco.hpp>
 
 typedef float IMGTYPE;

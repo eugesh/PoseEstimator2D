@@ -9,12 +9,12 @@
 //#include <cufft.h>
 #include <cuda.h>
 
-#define  KERNEL_LAUNCH 1
+#define KERNEL_LAUNCH 1
 #define IMGTYPE float //float or double (float ������� �� CUDA)//��� ������ �����������
-#define MAPTYPE uint16_t // int
+#define MAPTYPE unsigned int // int
 #define MATHTYPE float
 #define BLOCK_SIZE 512
-typedef uint16_t UINT;
+typedef unsigned int UINT;
 
 
 #ifdef __cplusplus

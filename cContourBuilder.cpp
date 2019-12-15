@@ -336,7 +336,7 @@ cContoursBuilderGPU::EstimateShifts() {
     int SHADOW_VALUE = 1;
     int Success = 0;
 
-    { // Create contour
+    /*{ // Create contour
         int NUM_BLOCK_X = 1;// maxH;
         int NUM_BLOCK_Y = m_templates_vec.size(); // numPhi * num_plane;//numPhi;
         int NUM_THREAD_X = 1; //maxW; //maxW*maxH;
@@ -355,7 +355,7 @@ cContoursBuilderGPU::EstimateShifts() {
             return ErrorCudaRun;
         }
 
-    }
+    }*/
 
     return 0;
 }
@@ -366,7 +366,7 @@ cContoursBuilderGPU::CreateContours() {
     int SHADOW_VALUE = 1;
     int Success = 0;
 
-    { // Create contour
+    /*{ // Create contour
         int NUM_BLOCK_X = 1;// maxH;
         int NUM_BLOCK_Y = m_templates_vec.size(); // numPhi*num_plane;//numPhi;
         int NUM_THREAD_X = 1;//maxW;//maxW*maxH;
@@ -387,7 +387,7 @@ cContoursBuilderGPU::CreateContours() {
             return ErrorCudaRun;
         }
 
-    }
+    }*/
 
     return 0;
 }

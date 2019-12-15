@@ -131,7 +131,7 @@ cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
     int value2 = 0; // SHADOW_VALUE;
     float alpha = 0.7;
 
-    int error_create_matr =
+    /*int error_create_matr =
         create_matr_of_means_sparse(m_NUM_BLOCK_X, m_NUM_BLOCK_Y, m_NUM_THREAD_X, m_NUM_THREAD_Y,
                                     m_shotGPU, m_cbg.getSparseContoursGPU(),
                                     m_cbg.getSparceShiftsGPU(), // int *lengthAr_sparse,
@@ -145,7 +145,7 @@ cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
         printf("Error: create_matr_of_means3_sparse: cudaLaunch : Error message = %d\n", error_create_matr  ) ;
         // clearMemory( );
         // return ErrorCudaRun;
-    }
+    }*/
 
     return 0;
 }
