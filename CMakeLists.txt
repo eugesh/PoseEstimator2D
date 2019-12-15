@@ -2,8 +2,30 @@ cmake_minimum_required(VERSION 2.8)
 
 project(2DSIM)
 
-# Set your filepath
-SET(OpenCV_DIR /home/evgeny/soft/opencv/opencv/release)
+# Set your filepaths
+if(UNIX)
+    SET(OpenCV_DIR /home/evgeny/soft/opencv/opencv/release)
+    LINK_DIRECTORIES(/usr/local/lib/)
+endif (UNIX)
+
+if (WIN32)
+	SET(QT_MAKE_EXECUTABLE D:/qt5/5.12.6/msvc2017_64/bin/qmake.exe)
+	SET(Qt5Core_DIR D:/qt5/5.12.6/msvc2017_64/lib/cmake/Qt5Core)
+	SET(Qt5Widgets_DIR D:/qt5/5.12.6/msvc2017_64/lib/cmake/Qt5Widgets)
+	SET(Qt5Gui_DIR D:/qt5/5.12.6/msvc2017_64/lib/cmake/Qt5Gui)
+	set(OpenCV_DIR D:/opencv/ocv_4_1/Build/opencv)
+    SET(OpenCV_INSTALL_DIR D:/opencv/ocv_4_1/Install/opencv)
+	SET(OPENCV_BUILD_DIR D:/opencv/ocv_4_1/Build)
+	SET(OPENCV_INCLUDE_DIRS ${OpenCV_INSTALL_DIR}/include/opencv2)
+    #SET(OpenCV_DIR D:/soft/developerTools/OpenCV/opencv_2_4_3/build/x86/vc9)
+	if(CMAKE_BUILD_TYPE MATCHES Release)
+		LINK_DIRECTORIES(${OpenCV_DIR}/lib/Release)
+	else()
+		LINK_DIRECTORIES(${OpenCV_DIR}/lib/Debug)
+	endif()
+endif (WIN32)
+
+include_directories(${OpenCV_INCLUDE_DIRS} ${OPENCV_BUILD_DIR}/opencv)
 
 find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
@@ -14,8 +36,6 @@ if(NOT OpenCV_FOUND)
 endif()
 
 set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_videoio opencv_calib3d opencv_features2d opencv_flann opencv_photo opencv_aruco) #opencv_contrib
-
-LINK_DIRECTORIES(/usr/local/lib/)
 
 if(CMAKE_VERSION VERSION_LESS "2.8.11")
     include_directories(${OpenCV_INCLUDE_DIRS})
@@ -37,7 +57,7 @@ if(Qt5Widgets_FOUND)
     set(CMAKE_AUTOMOC ON)
     QT5_WRAP_UI(UISrcs ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui)
     #find_package(Qt5OpenGL REQUIRED)
-    include_directories(${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})# ${Qt5OpenGL_INCLUDE_DIRS})
+    include_directories(${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${OPENCV_BUILD_DIR}/opencv)# ${Qt5OpenGL_INCLUDE_DIRS})
 
     add_executable(2DSIM
         cAccurateMatcherGPU.cpp
