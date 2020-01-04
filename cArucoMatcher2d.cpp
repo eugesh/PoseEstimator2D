@@ -10,6 +10,8 @@
 #include <cuda.h>
 #include <math.h>
 
+const static float Marker_size = 0.1f; // [m]
+
 void
 draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, std::vector<cv::Vec3d> tvecs, std::vector<std::vector<cv::Point2f>> corners) {
     for(size_t i=0; i < ids.size(); i++) {

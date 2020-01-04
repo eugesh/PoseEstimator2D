@@ -53,7 +53,6 @@ private:
     INT m_template_size;
     ImgArray<IMGTYPE> m_img_arr_grad;
 
-    constexpr static float Marker_size = 0.1f; // [m]
     IMGTYPE *imgGPU, *imgGPU_grad; //,*imgGPU_neg;
     QVector3D m_lastPose;
     cv::Mat m_currentFrame;

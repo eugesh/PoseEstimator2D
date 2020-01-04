@@ -9,6 +9,8 @@ QT += core gui widgets network
 TARGET = 2DSIM
 TEMPLATE = app
 
+CONFIG += c++14
+
 unix: OpenCV_DIR=/home/evgeny/soft/opencv/opencv
 unix: OpenCV_contrib_DIR=/home/evgeny/soft/opencv/opencv_contrib/
 
@@ -46,7 +48,7 @@ CONFIG += link_pkgconfig
 }
 
 win32 {
-    OPENCV_DIR = "D:/opencv/ocv_4_1/Install/opencv"
+    OPENCV_DIR = "D:/opencv/ocv_4_1/msvc15/Install/opencv"
     OPENCV_INCLUDE_DIR = $$OPENCV_DIR/include/opencv2
     INCLUDEPATH += $$OPENCV_DIR/include
     INCLUDEPATH += $$OPENCV_INCLUDE_DIR
@@ -74,7 +76,7 @@ win32 {
 }
 
 #D:\opencv\ocv_4_1\Install\opencv\x64\vc15\lib
-OPENCV_BUILD_DIR=D:/opencv/ocv_4_1/Build
+OPENCV_BUILD_DIR=D:/opencv/ocv_4_1/msvc15/Build
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OPENCV_BUILD_DIR/opencv/lib/Release -lopencv_world420
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OPENCV_BUILD_DIR/opencv/lib/Debug -lopencv_world420d
@@ -99,10 +101,10 @@ CUDASOURCES = cu_matcher.cu
 
 # Path to cuda SDK install
 linux:CUDA_DIR = /usr/local/cuda
-win32:CUDA_DIR = "C:\CUDA\7_5"
+win32:CUDA_DIR = "C:\CUDA\9.2\toolkit"
 # Path to cuda toolkit install
 linux:CUDA_SDK = /usr/local/cuda/samples
-win32:CUDA_SDK = "C:\CUDA\7_5\Samples"
+win32:CUDA_SDK = "C:\CUDA\9.2\samples"
 
 #Cuda include paths
 INCLUDEPATH += $$CUDA_DIR/include
@@ -236,3 +238,6 @@ FORMS += \
 #qnx: target.path = /tmp/$${TARGET}/bin
 #else: unix:!android: target.path = /opt/$${TARGET}/bin
 #!isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    CMakeLists.txt
