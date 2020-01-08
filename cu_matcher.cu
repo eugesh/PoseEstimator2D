@@ -286,7 +286,7 @@ int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
     create_matr_of_mean_values_sparse<<<dimGrid, dimBlock>>>
         (pImg, arMap_sparse, shiftAr_sparse_cumsum, /*lengthAr_sparse,*/ arW, arH, pTable, ImgW, ImgH, betta, RX, RY, isadd, value1, value2, alpha);
 
-    cudaThreadSynchronize() ;
+    // cudaThreadSynchronize() ;
 #else
     int object_value;
     object_value = OBJECT_VALUE;

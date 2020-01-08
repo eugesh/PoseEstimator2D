@@ -152,6 +152,7 @@ get_shift_and_create_contour(float *in, INT W, INT H, bool useSh, int shadow_val
 cContoursBuilderGPU::cContoursBuilderGPU(std::vector<int> targetValues, std::vector<int> bckgValues)
  : m_targetValues(targetValues), m_bckgValues(bckgValues)
 {
+	Zero();
     // shiftArr.push_back(0);
 }
 
@@ -185,46 +186,47 @@ cContoursBuilderGPU::clearAll() {
 
     // free CUDA memroy
     if(mapGPU!=nullptr) {
-       cudaFree(mapGPU     );
+       cudaFree(mapGPU);
        mapGPU=nullptr;
     }
     if(contourGPU!=nullptr) {
-       cudaFree(contourGPU );
+       cudaFree(contourGPU);
        contourGPU=nullptr;
     }
     if(heightGPU!=nullptr) {
-       cudaFree(heightGPU  );
+       cudaFree(heightGPU);
        heightGPU=nullptr;
     }
     if(widthGPU!=nullptr) {
-       cudaFree(widthGPU   );
+       cudaFree(widthGPU);
        widthGPU=nullptr;
     }
 
     if(shiftGPU!=nullptr) {
-       cudaFree(shiftGPU   );
+       cudaFree(shiftGPU);
        shiftGPU=nullptr;
     }
 }
 
+void 
+cContoursBuilderGPU::Zero() {
+	if (!sparseShiftArr.empty())
+		sparseShiftArr.clear();
+	
+	contoursCPU_sparseArr = nullptr;
+	mapGPU = nullptr;
+	contourGPU = nullptr;
+	shiftGPU = nullptr;
+	shiftGPU_sparse = nullptr;
+	widthGPU = nullptr;
+	heightGPU = nullptr;
+}
+
 void
 cContoursBuilderGPU::initAll() {
-    // mapContoursArr=nullptr;
-    // widthArr=nullptr;
-    // heightArr=nullptr;
-    // shiftArr=nullptr;
+	Zero();
 
-    if(! sparseShiftArr.empty())
-        sparseShiftArr.clear();
     sparseShiftArr.push_back(0);
-
-
-    mapGPU=nullptr;
-    contourGPU=nullptr;
-    shiftGPU=nullptr;
-    shiftGPU_sparse=nullptr;
-    widthGPU=nullptr;
-    heightGPU=nullptr;
 }
 
 void
@@ -474,7 +476,7 @@ cContoursBuilderGPU::copyMemory2GPU() {
 
     mem2d = cudaMemcpy(shiftGPU_sparse, sparseShiftArr.data(), sizeof(INT) * sparseShiftArr.size(), cudaMemcpyHostToDevice);
 
-    mem2d = cudaMemcpy(contourGPU, contoursCPU_sparseArr, sizeof(MAPTYPE) * (sparseShiftArr.back() + sparseContoursVec.back().size()), cudaMemcpyHostToDevice);
+    mem2d = cudaMemcpy(contourGPU, contoursCPU_sparseArr, sizeof(MAPTYPE) * (sparseShiftArr.back()/* + sparseContoursVec.back().size()*/), cudaMemcpyHostToDevice);
 
-    return 0;
+    return mem2d;
 }

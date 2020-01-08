@@ -49,6 +49,7 @@ public:
     // Call it after all contours creation and when all of them appended by #append(QImage const& img) or #append(cv::Mat img).
     void contoursSetup();
     void initAll();
+	void Zero();
 
     Vector<SparseContour> get_sparseContoursVec() { return  sparseContoursVec; }
 

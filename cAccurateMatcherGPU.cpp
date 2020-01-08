@@ -64,9 +64,18 @@ int
 cAccurateMatcherGPU::init_memory() {
     m_pTable = new float[m_NUM_BLOCK_Y * m_NUM_THREAD_X];
 
+    // Allocate memory for m_shotGPU.
+
+    // Allocate memory for table.
     cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_pTableGPU), sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X);
 
-    return 0;
+    if (mem2d) {
+        printf("Error: init_memory: cudaMalloc : Error message = %d\n", mem2d);
+        // clearMemory( );
+        // return ErrorCudaRun;
+    }
+
+    return mem2d;
 }
 
 void
@@ -77,7 +86,7 @@ cAccurateMatcherGPU::setContoursBuilder(cContoursBuilderGPU const& cbg) {
 
     m_NUM_BLOCK_X = 1;
     m_NUM_BLOCK_Y = int ( ceil( double( D_ROI_X * D_ROI_Y )));  // / BLOCK_SIZE)));
-    m_NUM_THREAD_X = m_cbg.get_sparseContoursVec().size(); //BLOCK_SIZE; //maxW*maxH;
+    m_NUM_THREAD_X = m_cbg.get_sparseContoursVec().size() / BLOCK_SIZE; //maxW*maxH;
     m_NUM_THREAD_Y = 1;
 
     init_memory();
@@ -95,16 +104,28 @@ cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
     // Copy memory.
     mem2d = cudaMemcpy(m_shotGPU, imgArr.getArray(), sizeof(IMGTYPE) * imgArr.width() * imgArr.height(), cudaMemcpyHostToDevice);
 
+    if (mem2d) {
+        printf("Error: translateShot2GPU: cudaMemcpy : Error message = %d\n", mem2d);
+        // clearMemory( );
+        // return ErrorCudaRun;
+    }
+
     cudaDeviceSynchronize();
 
-    return 0;
+    return mem2d;
 }
 
 int
 cAccurateMatcherGPU::getTableFromGPU() {
     cudaError_t mem2d = cudaMemcpy(m_pTable, m_pTableGPU, sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X, cudaMemcpyDeviceToHost);
 
-    return 0;
+    if (mem2d) {
+        printf("Error: getTableFromGPU: cudaMemcpy : Error message = %d\n", mem2d);
+        // clearMemory( );
+        // return ErrorCudaRun;
+    }
+
+    return mem2d;
 }
 
 void
@@ -126,28 +147,28 @@ cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
 
     // Run matching process on GPU
     float betta = 1; // alphaContour * (-1);
-    int isadd = 0;
+    int isadd = 1;
     int value1 = 1; // OBJECT_VALUE;
     int value2 = 0; // SHADOW_VALUE;
     float alpha = 0.7;
 
-    /*int error_create_matr =
-        create_matr_of_means_sparse(m_NUM_BLOCK_X, m_NUM_BLOCK_Y, m_NUM_THREAD_X, m_NUM_THREAD_Y,
-                                    m_shotGPU, m_cbg.getSparseContoursGPU(),
-                                    m_cbg.getSparceShiftsGPU(), // int *lengthAr_sparse,
-                                    m_cbg.getWGPU(), m_cbg.getHGPU(),
-                                    m_cbg.getShiftsGPU(), m_pTableGPU,
-                                    imgArr.width(), imgArr.height(),
-                                    betta, D_ROI_X, D_ROI_Y, isadd,
-                                    value1, value2, alpha);
+    int error_create_matr = 0;
+    error_create_matr = create_matr_of_means_sparse(m_NUM_BLOCK_X, m_NUM_BLOCK_Y, m_NUM_THREAD_X, m_NUM_THREAD_Y,
+                                                    m_shotGPU, m_cbg.getSparseContoursGPU(),
+                                                    m_cbg.getSparceShiftsGPU(), // int *lengthAr_sparse,
+                                                    m_cbg.getWGPU(), m_cbg.getHGPU(),
+                                                    m_cbg.getShiftsGPU(), m_pTableGPU,
+                                                    imgArr.width(), imgArr.height(),
+                                                    betta, D_ROI_X, D_ROI_Y, isadd,
+                                                    value1, value2, alpha);
 
     if(error_create_matr) {
         printf("Error: create_matr_of_means3_sparse: cudaLaunch : Error message = %d\n", error_create_matr  ) ;
         // clearMemory( );
         // return ErrorCudaRun;
-    }*/
+    }
 
-    return 0;
+    return error_create_matr;
 }
 
 void
@@ -163,12 +184,13 @@ cAccurateMatcherGPU::estimate(cv::Vec3d & rvec, cv::Vec3d & tvec, const ImgArray
     // Find maximum.
     float max=0.0f;
     for(int i=0; i < m_NUM_BLOCK_Y * m_NUM_THREAD_X; ++i) {
-
-        if(m_pTable[i] > max)
-            max = m_pTable[i];
+        float val = m_pTable[i];
+        if(val > max)
+            max = val;
     }
 
     std::cout << "max value = " << max << std::endl;
+    printf("max value from printf: %f", max);
 
     // Emit quaternion.
 }
