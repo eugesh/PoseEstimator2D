@@ -9,12 +9,13 @@
 //#include <cufft.h>
 #include <cuda.h>
 #include <math.h>
+// #include <windows.h>
 
-const static float Marker_size = 0.1f; // [m]
+const static float Marker_size = 0.13f; // [m]
 
 void
 draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, std::vector<cv::Vec3d> tvecs, std::vector<std::vector<cv::Point2f>> corners) {
-    for(size_t i=0; i < ids.size(); i++) {
+    for (size_t i=0; i < ids.size(); i++) {
         cv::aruco::drawDetectedMarkers(image, corners);
         cv::aruco::drawAxis(image, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
     }
@@ -23,7 +24,7 @@ draw_markers(cv::Mat image, std::vector<int> ids, std::vector<cv::Vec3d> rvecs, 
 void print_contours(cv::Ptr<cv::aruco::Dictionary> dictionary, int template_size, QString name) {
     cv::Mat marker;
 
-    for(int i=0; i < 50; ++i) {
+    for (int i=0; i < 50; ++i) {
         cv::aruco::drawMarker(dictionary, i, template_size, marker);
         if(marker.cols > 0)
             cv::imwrite(QString("%1_id%2.png").arg(name).arg(i).toUtf8().toStdString(), marker);
@@ -62,7 +63,7 @@ ArucoMatcher2D::init_contours() {
     cv::Mat marker;
     cv::aruco::drawMarker(dictionary, m_ids_vec.front(), m_template_size, marker);
 
-    if(DEBUG)
+    if (DEBUG)
         print_contours(dictionary, m_template_size, "5x5");
 
     // Convert cv::Mat to QImage
@@ -104,17 +105,17 @@ ArucoMatcher2D::estimate_pose(std::vector<cv::Vec3d> & rvecs, std::vector<cv::Ve
 // x, y, phi relative to image SC.
 // Rough estimation by standard library (Aruco lib).
 bool
-ArucoMatcher2D::estimate_pose(std::vector<int> & ids, std::vector<std::vector<cv::Point2f>> & corners, std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
+ArucoMatcher2D::estimate_pose(std::vector<int> & ids, std::vector<std::vector<cv::Point2f> > & corners, std::vector<cv::Vec3d> & rvecs, std::vector<cv::Vec3d> & tvecs, cv::Mat shot) {
     // Find Aruco marker on image;
 
     cv::aruco::detectMarkers(shot, dictionary, corners, ids);
-    if(ids.empty())
+    if (ids.empty())
         return false;
 
     cv::aruco::estimatePoseSingleMarkers(corners, Marker_size, intrinsic_matrix, distortion_coeff, rvecs, tvecs);
 
     // Draw markers.
-    if(DRAW)
+    if (DRAW)
         draw_markers(shot, ids, rvecs, tvecs, corners);
     // for(size_t i=0; i < ids.size() && DRAW; i++)
        // cv::aruco::drawAxis(shot, intrinsic_matrix, distortion_coeff, rvecs[i], tvecs[i], 0.1f);
@@ -192,7 +193,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
 
 
     // Convert Rodrigues to Quaterninon.
-    QQuaternion quat = rvec2QQaternion(rvec);
+    QQuaternion quat = rvec2QQaternion(rvec); //.inverted();
 
     // Convert quaternion to Euler.
     QVector3D EulerAngles = quat.toEulerAngles();
@@ -223,7 +224,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
     m_img_arr_grad.setImage(cut_shot_scaled);
     create_matr_gradXY(m_img_arr_grad.getArray(), img_ar.width(), img_ar.height(), img_ar.getArray());
 
-    if(DRAW) {
+    if (DRAW) {
         // Show transformed image.
         cv::Mat img_tmp = ocv::qt::qimage_to_mat_cpy(qimg_planar, false);
         cv::Mat img_tmp_copy;
@@ -236,7 +237,7 @@ ArucoMatcher2D::prepareShot2Matcher(std::vector<cv::Point2f> corners, cv::Vec3d 
         cv::imshow("frame_planar", img_tmp);
     }
 
-    if(DEBUG) {
+    if (DEBUG && ! m_img_arr_grad.empty()) {
         // Save image.
         float range = (m_img_arr_grad.max() - m_img_arr_grad.min());
         m_img_arr_grad = m_img_arr_grad * float(255) / range;
@@ -270,35 +271,77 @@ ArucoMatcher2D::estimate_poseAccurate(std::vector<cv::Vec3d> & rvecs, std::vecto
 void
 ArucoMatcher2D::run() {
     cv::VideoCapture inputVideo;
-    inputVideo.open(0);
 
-    while (inputVideo.grab()) {
-        cv::Mat image, imageCopy, EulerAngles;
-        std::vector<cv::Vec3d> rvecs, tvecs;
-        std::vector<int> ids;
-        std::vector<std::vector<cv::Point2f>> corners;
-        QImage qImageCopy, qImg_planar_grad;
+    if (inputVideo.open(0)) {
+        while (inputVideo.grab()) {
+            cv::Mat image, imageCopy, EulerAngles;
+            std::vector<cv::Vec3d> rvecs, tvecs;
+            std::vector<int> ids;
+            std::vector<std::vector<cv::Point2f> > corners;
+            QImage qImageCopy, qImg_planar_grad;
 
-        inputVideo.retrieve(image);
-        image.copyTo(imageCopy);
-        qImageCopy = ocv::qt::mat_to_qimage_cpy(image, false);
+            inputVideo.retrieve(image);
+            image.copyTo(imageCopy);
+            qImageCopy = ocv::qt::mat_to_qimage_cpy(image, false);
 
-        // Estimate pose with Aruco lib.
-        if(estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
+            // Estimate pose with Aruco lib.
+            if (estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
 
-            // Apply Transfrom
-            prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
+                // Apply Transfrom
+                prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
 
-            // Run Accurate matcher -> estimate delta rotation shift.
-            // estimate_poseAccurate
-            m_accMatcher.estimate(rvecs.front(), tvecs.front(), m_img_arr_grad);
+                // Run Accurate matcher -> estimate delta rotation shift.
+                // estimate_poseAccurate
+                m_accMatcher.estimate(rvecs.front(), tvecs.front(), m_img_arr_grad);
+            }
+
+            // Draw marker: compare Aruco and Accurate matcher results.
+            cv::imshow("frame", imageCopy);
+            char key = char(cv::waitKey(3));
+            if(key == 27)
+                return;
         }
+    }
+    else if (DEBUG){
+        // Stub: Infinite loop with the same image;
+        // QImage img2test("D:/workspace/projects/PoseEstimator2D/img2test.png");
+        // img2test.save("D:/workspace/projects/PoseEstimator2D/img2test2.png");
 
-        // Draw marker: compare Aruco and Accurate matcher results.
-        cv::imshow("frame", imageCopy);
-        char key = char(cv::waitKey(3));
-        if(key == 27)
-            return;
+        forever {
+            cv::Mat image, imageCopy, EulerAngles;
+            std::vector<cv::Vec3d> rvecs, tvecs;
+            std::vector<int> ids;
+            std::vector<std::vector<cv::Point2f> > corners;
+            QImage qImageCopy, qImg_planar_grad;
+
+            // inputVideo.retrieve(image);
+            // qImageCopy = img2test; //ocv::qt::mat_to_qimage_cpy(image, false);
+            // image = ocv::qt::qimage_to_mat_cpy(img2test);
+            image = cv::imread("D:/workspace/projects/PoseEstimator2D/planar4.png");// , CV_LOAD_IMAGE_COLOR);
+            // imageCopy = cv::imread("D:/workspace/projects/PoseEstimator2D/planar.png");// , CV_LOAD_IMAGE_COLOR);
+            image.copyTo(imageCopy);
+            qImageCopy = ocv::qt::mat_to_qimage_cpy(image, false);
+            // cv::imwrite("D:/workspace/projects/PoseEstimator2D/img2test3.png", imageCopy);
+
+            // Estimate pose with Aruco lib.
+            if (estimate_pose(ids, corners, rvecs, tvecs, imageCopy)) {
+
+                // Apply Transfrom
+                prepareShot2Matcher(corners.front(), rvecs.front(), tvecs.front(), qImageCopy);
+
+                // Run Accurate matcher -> estimate delta rotation shift.
+                // estimate_poseAccurate
+                m_accMatcher.estimate(rvecs.front(), tvecs.front(), m_img_arr_grad);
+            }
+
+            // Draw marker: compare Aruco and Accurate matcher results.
+            cv::imshow("frame", imageCopy);
+            char key = char(cv::waitKey(3));
+            if(key == 27)
+                return;
+
+             // Sleep(10000);
+        }
     }
 }
 

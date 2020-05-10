@@ -1,5 +1,7 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
+#include <QFile>
+#include <QByteArray>
 
 #include "cAccurateMatcherGPU.h"
 
@@ -12,9 +14,9 @@ extern "C" {
 int create_matr_of_means_sparse(int NUM_BLOCK_X,  int NUM_BLOCK_Y,
                                 int NUM_THREAD_X, int NUM_THREAD_Y,
                                 IMGTYPE *pImg,    MAPTYPE *arMap,
-                                int *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
-                                int *arW,         int *arH,
-                                int *shiftAr,     float *pTable,
+                                INT *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
+                                INT *arW,         INT *arH,
+                                float *pTable,
                                 int ImgW,         int ImgH,
                                 float betta,      int RX,
                                 int RY,           int isadd,
@@ -62,18 +64,20 @@ cAccurateMatcherGPU::Zero() {
 
 int
 cAccurateMatcherGPU::init_memory() {
-    m_pTable = new float[m_NUM_BLOCK_Y * m_NUM_THREAD_X];
+    m_pTable = new float[m_NUM_BLOCK_X * m_NUM_BLOCK_Y * m_NUM_THREAD_X];
 
     // Allocate memory for m_shotGPU.
 
     // Allocate memory for table.
-    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_pTableGPU), sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X);
+    cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_pTableGPU), sizeof(float) * m_NUM_BLOCK_X * m_NUM_BLOCK_Y * m_NUM_THREAD_X);
 
     if (mem2d) {
         printf("Error: init_memory: cudaMalloc : Error message = %d\n", mem2d);
         // clearMemory( );
         // return ErrorCudaRun;
     }
+
+    mem2d = cudaMemcpy(m_pTableGPU, m_pTable, sizeof(float) * m_NUM_BLOCK_Y * m_NUM_BLOCK_X * m_NUM_THREAD_X, cudaMemcpyHostToDevice);
 
     return mem2d;
 }
@@ -84,9 +88,9 @@ cAccurateMatcherGPU::setContoursBuilder(cContoursBuilderGPU const& cbg) {
 
     Clear();
 
-    m_NUM_BLOCK_X = 1;
-    m_NUM_BLOCK_Y = int ( ceil( double( D_ROI_X * D_ROI_Y )));  // / BLOCK_SIZE)));
-    m_NUM_THREAD_X = m_cbg.get_sparseContoursVec().size() / BLOCK_SIZE; //maxW*maxH;
+    m_NUM_BLOCK_X = m_cbg.get_sparseContoursVec().size(); // / BLOCK_SIZE;
+    m_NUM_BLOCK_Y = 1; //BLOCK_SIZE;
+    m_NUM_THREAD_X = int ( ceil( double( D_ROI_X * D_ROI_Y )));
     m_NUM_THREAD_Y = 1;
 
     init_memory();
@@ -99,6 +103,10 @@ cAccurateMatcherGPU::~cAccurateMatcherGPU() {
 int
 cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
     // Allocate memory.
+    if (m_shotGPU) {
+        cudaFree(m_shotGPU);
+        m_shotGPU = nullptr;
+    }
     cudaError_t mem2d = cudaMalloc(reinterpret_cast<void**>(&m_shotGPU), sizeof(IMGTYPE) * imgArr.width() * imgArr.height());
 
     // Copy memory.
@@ -117,12 +125,30 @@ cAccurateMatcherGPU::translateShot2GPU(const ImgArray<IMGTYPE> &imgArr) {
 
 int
 cAccurateMatcherGPU::getTableFromGPU() {
-    cudaError_t mem2d = cudaMemcpy(m_pTable, m_pTableGPU, sizeof(float) * m_NUM_BLOCK_Y * m_NUM_THREAD_X, cudaMemcpyDeviceToHost);
+    cudaError_t mem2d = cudaMemcpy(m_pTable, m_pTableGPU, sizeof(float) * m_NUM_BLOCK_Y * m_NUM_BLOCK_X * m_NUM_THREAD_X, cudaMemcpyDeviceToHost);
+
+	cudaDeviceSynchronize();
 
     if (mem2d) {
         printf("Error: getTableFromGPU: cudaMemcpy : Error message = %d\n", mem2d);
         // clearMemory( );
         // return ErrorCudaRun;
+    }
+
+	QFile filep("m_pTable.txt");
+	if (!filep.open(QFile::WriteOnly)) {
+		
+	}
+
+    for(int i=0; i < m_NUM_THREAD_X; ++i) {
+        for(int j=0; j < m_NUM_BLOCK_X * m_NUM_BLOCK_Y; ++j) {
+            // std::cout << m_pTable[i * m_NUM_BLOCK_X * m_NUM_BLOCK_Y + j] << std::endl;
+            QByteArray arr;
+            arr.append(QString("%1 ").arg(m_pTable[i * m_NUM_BLOCK_X * m_NUM_BLOCK_Y + j]));
+            filep.write(arr);
+        }
+        // std::cout << std::endl;
+        filep.write("\n");
     }
 
     return mem2d;
@@ -147,7 +173,7 @@ cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
 
     // Run matching process on GPU
     float betta = 1; // alphaContour * (-1);
-    int isadd = 1;
+    int isadd = 0;
     int value1 = 1; // OBJECT_VALUE;
     int value2 = 0; // SHADOW_VALUE;
     float alpha = 0.7;
@@ -157,13 +183,15 @@ cAccurateMatcherGPU::runMatching(const ImgArray<IMGTYPE> & imgArr) {
                                                     m_shotGPU, m_cbg.getSparseContoursGPU(),
                                                     m_cbg.getSparceShiftsGPU(), // int *lengthAr_sparse,
                                                     m_cbg.getWGPU(), m_cbg.getHGPU(),
-                                                    m_cbg.getShiftsGPU(), m_pTableGPU,
+                                                    m_pTableGPU,
                                                     imgArr.width(), imgArr.height(),
                                                     betta, D_ROI_X, D_ROI_Y, isadd,
                                                     value1, value2, alpha);
 
+    cudaDeviceSynchronize();
+
     if(error_create_matr) {
-        printf("Error: create_matr_of_means3_sparse: cudaLaunch : Error message = %d\n", error_create_matr  ) ;
+        printf("Error: create_matr_of_means_sparse: cudaLaunch : Error message = %d\n", error_create_matr  ) ;
         // clearMemory( );
         // return ErrorCudaRun;
     }

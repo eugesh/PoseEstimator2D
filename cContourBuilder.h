@@ -38,8 +38,8 @@ public:
     INT * getWArr() { return widthArr.data(); }
     INT * getHArr() { return heightArr.data(); }
     MAPTYPE * getSparseContoursGPU() { return contourGPU; }
-    INT * getShiftsGPU() { return shiftGPU; }
-    INT * getSparceShiftsGPU() { return shiftGPU; }
+    // INT * getShiftsGPU() { return shiftGPU; }
+    INT * getSparceShiftsGPU() { return shiftGPU_sparse; }
     INT * getWGPU() { return widthGPU; }
     INT * getHGPU() { return heightGPU; }
     void clearAll();
@@ -79,7 +79,7 @@ private: // Vars stored on GPU.
     MAPTYPE * contourGPU;
     MAPTYPE * mapGPU; // Deprecated
     INT * shiftGPU; // ToDo: Is 2^16 enough?
-    INT * shiftGPU_sparse;
+    INT * shiftGPU_sparse; // Notice: size of this vector is size(widthGPU) + 1.
     INT * widthGPU;
     INT * heightGPU;
 };

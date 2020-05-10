@@ -97,7 +97,7 @@ CONFIG += c++11
 
 ### CUDA ###
 # Copy from https://declanrussell.com/2016/02/10/qt-cuda-and-windows-development/
-CUDASOURCES = cu_matcher.cu
+CUDA_SOURCES = cu_matcher.cu
 
 # Path to cuda SDK install
 linux:CUDA_DIR = /usr/local/cuda
@@ -240,4 +240,5 @@ FORMS += \
 #!isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    CMakeLists.txt
+    CMakeLists.txt \
+    cu_matcher.cu

@@ -9,14 +9,27 @@ QT += core gui widgets network
 TARGET = 2d_sim
 TEMPLATE = app
 
-LIBS += -L/usr/local/cuda/lib64 -lcudart
-
 unix {
 INCLUDEPATH = /usr/local/include/opencv2/
 #LIBS += -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_contrib -lopencv
+LIBS += -L/usr/local/cuda/lib64 -lcudart
+
+CONFIG += link_pkgconfig
+PKGCONFIG += opencv
 }
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += opencv
+
+
+# Set your filepaths
+#if(UNIX)
+#    SET(OpenCV_DIR /home/evgeny/soft/opencv/opencv/release)
+#    LINK_DIRECTORIES(/usr/local/lib/)
+#endif (UNIX)
+
+WIN32 {
+    #INCLUDEPATH += D:/soft/developerTools/OpenCV/opencv_2_4_3/build #(OpenCV_DIR
+    INCLUDEPATH += D:/soft/developerTools/OpenCV/opencv_2_4_3/build/include
+    LIBS += D:/soft/developerTools/OpenCV/opencv_2_4_3/build/x64/vc10/bin
+}
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -32,7 +45,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    arucomatcher2d.cpp \
+    cArucoMatcher2d.cpp \
+    cAccurateMatcherGPU.cpp \
     cContourBuilder.cpp \
     cudaWrapper.cpp \
     i_ContoursMatcher.cpp \
@@ -42,7 +56,8 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
-    arucomatcher2d.h \
+    cAccurateMatcherGPU.h \
+    cArucoMatcher2d.h \
     cContourBuilder.h \
     cudaWrapper.h \
     cv_math.hpp \

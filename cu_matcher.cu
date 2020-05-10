@@ -11,10 +11,11 @@
 
 #define KERNEL_LAUNCH 1
 #define IMGTYPE float //float or double (float ������� �� CUDA)//��� ������ �����������
-#define MAPTYPE unsigned int // int
+#define MAPTYPE int // int
 #define MATHTYPE float
 #define BLOCK_SIZE 512
 typedef unsigned int UINT;
+typedef int32_t INT;
 
 
 #ifdef __cplusplus
@@ -34,9 +35,9 @@ int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD
 int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
                                 int NUM_THREAD_X, int NUM_THREAD_Y,
                                 IMGTYPE *pImg, MAPTYPE *arMap,
-                                int *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
-                                int *arW, int *arH,
-                                int *shiftAr, float *pTable,
+                                INT *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
+                                INT *arW, INT *arH,
+                                float *pTable,
                                 int ImgW, int ImgH,
                                 float betta, int RX,
                                 int RY, int isadd, MAPTYPE value1, MAPTYPE value2, float alpha);
@@ -52,13 +53,13 @@ __global__ void create_contour_map_combi_sparse(MAPTYPE *out_sparse, UINT *shift
 
 // Mean value calculation.
 __global__ void create_matr_of_mean_values_sparse(IMGTYPE *pImg, MAPTYPE *arMap_sparse,
-                                                  int *shiftAr_sparse_cumsum, //int *lengthAr_sparse,
-                                                  int *arW, int *arH,
+                                                  INT *shiftAr_sparse_cumsum, //int *lengthAr_sparse,
+                                                  INT *arW, INT *arH,
                                                   float *pTable, int ImgW, int ImgH,
                                                   float betta, int RX, int RY, int isadd, MAPTYPE value1, MAPTYPE value2, float alpha);
 
 // Device functions.
-__device__ float device_calc_mean_sparse(IMGTYPE*pImg, MAPTYPE*pContour_sparse, int shift, int pMap_sparse_cur_size, int W, int H, int ImgW, int ImgH, int RX, int RY, int ix, float alpha);
+__device__ float device_calc_mean_sparse(IMGTYPE*pImg, MAPTYPE*pContour_sparse, INT shift, int pMap_sparse_cur_size, int W, int H, int ImgW, int ImgH, int RX, int RY, int ix, float alpha);
 // __device__ float device_calc_mean_contour(IMGTYPE*pImg, MAPTYPE*pMap, int W, int H, int shift, int ImgW, int ImgH, int RX, int RY);
 
 //<---- EXTERN C ----
@@ -86,7 +87,7 @@ int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, i
        printf("Error:create_contour_map_combi:cudaConfigureCall1:Error message=%s\n",
                                                    cudaGetErrorString(resConfigCall));
 
-       return ErrorCudaRun;
+	   return -1; // ErrorCudaRun;
     } ;
     cudaError_t resSetupArg ;
     int offset = 0 ;
@@ -271,9 +272,9 @@ __global__ void create_contour_map_combi_sparse(MAPTYPE*out_sparse, UINT*shiftAr
 int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
                                 int NUM_THREAD_X, int NUM_THREAD_Y,
                                 IMGTYPE *pImg, MAPTYPE *arMap_sparse,
-                                int *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
-                                int *arW, int *arH,
-                                int *shiftAr, float *pTable,
+                                INT *shiftAr_sparse_cumsum, // int *lengthAr_sparse,
+                                INT *arW, INT *arH,
+                                float *pTable,
                                 int ImgW, int ImgH,
                                 float betta, int RX,
                                 int RY, int isadd, MAPTYPE value1, MAPTYPE value2, float alpha)
@@ -288,6 +289,71 @@ int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
 
     // cudaThreadSynchronize() ;
 #else
+    cudaError_t resConfigCall = cudaConfigureCall(dimGrid, dimBlock);
+    if (resConfigCall != cudaSuccess)
+    {
+        printf("Error: create_matr_of_means_sparse: cudaConfigureCall: Error message=%s\n",
+            cudaGetErrorString(resConfigCall));
+
+        return -1; // ErrorCudaRun;
+    };
+    cudaError_t resSetupArg;
+    int offset = 0;
+
+    resSetupArg = cudaSetupArgument(&pImg, sizeof(IMGTYPE*), offset);
+    offset += sizeof(IMGTYPE*);
+    resSetupArg = cudaSetupArgument(&arMap_sparse, sizeof(MAPTYPE*), offset);
+    offset += sizeof(MAPTYPE*);
+    resSetupArg = cudaSetupArgument(&shiftAr_sparse_cumsum, sizeof(INT*), offset);
+    offset += sizeof(INT*);
+    resSetupArg = cudaSetupArgument(&arW, sizeof(INT*), offset);
+    offset += sizeof(INT*);
+    resSetupArg = cudaSetupArgument(&arH, sizeof(INT*), offset);
+    offset += sizeof(INT*);
+    resSetupArg = cudaSetupArgument(&pTable, sizeof(float*), offset);
+    offset += sizeof(float*);
+    resSetupArg = cudaSetupArgument(&ImgW, sizeof(int), offset);
+    offset += sizeof(int);
+    resSetupArg = cudaSetupArgument(&ImgH, sizeof(int), offset);
+    offset += sizeof(int);
+    resSetupArg = cudaSetupArgument(&betta, sizeof(float), offset);
+    offset += sizeof(float);
+    resSetupArg = cudaSetupArgument(&RX, sizeof(int), offset);
+    offset += sizeof(int);
+    resSetupArg = cudaSetupArgument(&RY, sizeof(int), offset);
+    offset += sizeof(int);
+    resSetupArg = cudaSetupArgument(&isadd, sizeof(int), offset);
+    offset += sizeof(int);
+    resSetupArg = cudaSetupArgument(&value1, sizeof(MAPTYPE), offset);
+    offset += sizeof(MAPTYPE);
+    resSetupArg = cudaSetupArgument(&value2, sizeof(MAPTYPE), offset);
+    offset += sizeof(MAPTYPE);
+    resSetupArg = cudaSetupArgument(&alpha, sizeof(float), offset);
+    offset += sizeof(float);
+
+    if (resSetupArg != cudaSuccess)
+    {
+        printf("Error: create_matr_of_mean_values: cudaSetupArgument: Error message=%s\n",
+            cudaGetErrorString(resSetupArg));
+
+        return -1; // ErrorCudaRun;
+    };
+
+    cudaError_t resLaunch = cudaSuccess;
+
+    resLaunch = cudaLaunch(create_matr_of_mean_values_sparse);
+
+    cudaThreadSynchronize();
+    if (resLaunch != cudaSuccess)
+    {
+        printf("Error: create_matr_of_mean_values_sparse: cudaLaunch : Error message = %s\n",
+            cudaGetErrorString(resLaunch));
+
+        return -1; // ErrorCudaRun;
+    };
+#endif
+
+#if 0
     int object_value;
     object_value = OBJECT_VALUE;
     cudaError_t resConfigCall = cudaConfigureCall(dimGrid,dimBlock);
@@ -305,14 +371,14 @@ int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
                                                      offset+=sizeof(IMGTYPE*);
         resSetupArg=cudaSetupArgument(&arMap_sparse,sizeof(MAPTYPE*),offset);
                                                      offset+=sizeof(MAPTYPE*);
-        resSetupArg=cudaSetupArgument(&shiftAr_sparse_cumsum,sizeof(int*),offset);
-                                                     offset+=sizeof(int*);
-        resSetupArg=cudaSetupArgument(&lengthAr_sparse,sizeof(int*),offset);
-                                                     offset+=sizeof(int*);
-        resSetupArg=cudaSetupArgument(&arW,sizeof(int*),offset);
-                                                     offset+=sizeof(int*);
-        resSetupArg=cudaSetupArgument(&arH,sizeof(int*),offset);
-                                                     offset+=sizeof(int*);
+        resSetupArg=cudaSetupArgument(&shiftAr_sparse_cumsum,sizeof(INT*),offset);
+                                                     offset+=sizeof(INT*);
+        resSetupArg=cudaSetupArgument(&lengthAr_sparse,sizeof(INT*),offset);
+                                                     offset+=sizeof(INT*);
+        resSetupArg=cudaSetupArgument(&arW,sizeof(INT*),offset);
+                                                     offset+=sizeof(INT*);
+        resSetupArg=cudaSetupArgument(&arH,sizeof(INT*),offset);
+                                                     offset+=sizeof(INT*);
         resSetupArg=cudaSetupArgument(&pTable,sizeof(float*),offset);
                                                      offset+=sizeof(float*);
         resSetupArg=cudaSetupArgument(&ImgW,sizeof(int),offset);
@@ -360,23 +426,40 @@ int create_matr_of_means_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y,
 } //create_matr_of_means
 
 __global__ void create_matr_of_mean_values_sparse(IMGTYPE *pImg, MAPTYPE *arMap_sparse,
-                    int *shiftAr_sparse_cumsum, //int lengthAr_sparse,
-                    int *arW, int *arH,
-                    float *pTable, int ImgW, int ImgH,
+                    INT *shiftAr_sparse_cumsum, //int lengthAr_sparse,
+                    INT *arW, INT *arH,
+                    float *pTable, INT ImgW, INT ImgH,
                     float betta, int RX, int RY, int isadd, MAPTYPE value1, MAPTYPE value2, float alpha)
 {
     //-- Block and thread indices
-    int by = blockIdx.y ;
     int tx = threadIdx.x ;
     int bx = blockIdx.x ;
+    int by = blockIdx.y;
     int DBx = blockDim.x ;
-    int ix = bx*DBx + tx;
+    int DGx = gridDim.x;
+    int DGy = gridDim.y;
 
-    int lengthAr_sparse = shiftAr_sparse_cumsum[by + 1] - shiftAr_sparse_cumsum[by];
+    int iy = DGx * by + bx; // Index in containers.
+    int ix = tx; // ROI index.
 
-    pTable[by*RX*RY+ix] = pTable[by*RX*RY+ix] * isadd + betta *
+
+    // int lengthAr_sparse = shiftAr_sparse_cumsum[iy + 1] - shiftAr_sparse_cumsum[iy];
+    // INT lengthAr_sparse = shiftAr_sparse_cumsum[tx];
+
+    __syncthreads();
+
+    // pTable[iy * RX * RY + ix] = pTable[iy * RX * RY + ix] * isadd + betta *
         // device_calc_mean3_sparse(pImg,arMap_sparse,arW[by],arH[by],shiftAr[by],ImgW,ImgH,RX,RY,ix,value1,value2,alpha);
-        device_calc_mean_sparse(pImg, arMap_sparse, shiftAr_sparse_cumsum[by], lengthAr_sparse, arW[by], arH[by], ImgW, ImgH, RX, RY, ix, alpha);
+        //device_calc_mean_sparse(pImg, arMap_sparse, shiftAr_sparse_cumsum[iy], lengthAr_sparse, arW[iy], arH[iy], ImgW, ImgH, RX, RY, ix, alpha);
+
+    // pTable[iy * RX * RY + ix] = float(lengthAr_sparse);
+    // pTable[iy * RX * RY + ix] = iy * RX * RY + ix;
+    // pTable[iy * RX * RY + ix] = iy;
+
+    // for (int i = 0; i < 10; ++i)
+    pTable[bx] = pImg[bx];
+
+    __syncthreads();
 }
 
 /**
@@ -393,10 +476,10 @@ int RY,
 int ix,
 float alpha
 */
-__device__ float device_calc_mean_sparse (IMGTYPE *pImg, MAPTYPE *pContour_sparse, int shift, int pMap_sparse_cur_size, int W, int H,
+__device__ float device_calc_mean_sparse (IMGTYPE *pImg, MAPTYPE *pContour_sparse, INT shift, int pMap_sparse_cur_size, int W, int H,
                                           int ImgW, int ImgH, int RX, int RY, int ix, float alpha)
 {
-    if(pMap_sparse_cur_size <= 0) {
+    /*if(pMap_sparse_cur_size <= 0) {
         return 0.0f;
     }
 
@@ -411,10 +494,12 @@ __device__ float device_calc_mean_sparse (IMGTYPE *pImg, MAPTYPE *pContour_spars
     for(int i=0; i < pMap_sparse_cur_size; i++) {
         int x = pContour_sparse[shift + i] % W; // coords of contours elements in map SC
         int y = pContour_sparse[shift + i] / W;
-           ksi += pImg[(shiftY + y) * ImgW + shiftX + x] ;
+        // ksi += pImg[(shiftY + y) * ImgW + shiftX + x] ;
     }
 
-    return float(ksi) / (512 * __powf( float(pMap_sparse_cur_size / 2), alpha));
+    return float(ksi) / (512 * __powf( float(pMap_sparse_cur_size / 2), alpha));*/
+    // return float(pMap_sparse_cur_size);
+    return 111.4;
 }
 
 #if 0

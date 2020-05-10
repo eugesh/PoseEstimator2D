@@ -121,6 +121,12 @@ public:
     // printf("ImgArray destructor2\n");
   }
 public:
+  bool empty() const { 
+    if (w < 2 || h < 2 || w * h < 10)
+      return true;
+    else
+      return false;
+  }
   int width ( ) const { return w ; }
   int height( ) const { return h ; }
   T *getArray ( ) { return Array ; }
@@ -129,13 +135,16 @@ public:
 
     QImage toQImage() {
         QImage img(w, h, QImage::Format_Indexed8);
-        for(int l = 0; l < 256; ++l)
+        for (int l = 0; l < 256; ++l)
             img.setColor( l, QColor(l,l,l).rgb( ) ) ;
         img.fill(Qt::black) ;
 
-        for(int i=0; i < h; ++i) {
+        for (int i=0; i < h; ++i) {
             for(int j=0; j < w; ++j) {
                 int val = (int)Array[i * w + j];
+
+                if (val < 0)
+                    val = 0;
 
                 if(val > 255)
                     val = 255;

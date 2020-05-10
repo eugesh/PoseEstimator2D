@@ -6,19 +6,20 @@
 #include <cuda_runtime_api.h>
 //#include <cufft.h>
 #include <cuda.h>
+#include <QFile>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
+/*int get_shift_to_create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
                                              MAPTYPE*mapGPU,
-                                             INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);
+                                             INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);*/
 
-int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
+/*int create_contour_combi_sparse(int NUM_BLOCK_X, int NUM_BLOCK_Y, int NUM_THREAD_X, int NUM_THREAD_Y,
                                  MAPTYPE*contourGPU, MAPTYPE*mapGPU,
-                                 INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);
+                                 INT*shiftGPU_sparse, INT*shiftGPU, INT*widthGPU, INT*heightGPU, int use_shadow, int shadow_value);*/
 #ifdef __cplusplus
 }
 #endif
@@ -95,17 +96,17 @@ Contour create_contour_map_combi_sparse(T*in, UINT shift, UINT W, UINT H, int us
  * param[out] sparse_shift
  */
 SparseContour
-get_shift_and_create_contour(int *in, INT W, INT H, bool useSh, int shadow_value, INT & sparse_shift) {
+get_shift_and_create_contour(INT *in, INT W, INT H, bool useSh, INT shadow_value, INT & sparse_shift) {
     SparseContour sparse_contour;
 
-    int arg = 0;
+	INT arg = 0;
     sparse_shift = 0;
 
     for(int i=0; i < H; ++i) {
         for(int j=0; j < W; ++j) {
             // out[shiftAr[by]+i*arW[by]+j]=0;
             arg = in[i * W + j];
-            if(arg!=0 && arg!=(! useSh)*shadow_value && i!=0 && j!=0 && i!=H && j!=W)
+            if(arg!=0 && arg!=(! useSh)*shadow_value && i!=1 && j!=1 && i!=H-1 && j!=W-1)
                 if(((in[i * W + j - 1] != arg) ||
                     (in[i * W + j + 1] != arg) ||
                     (in[(i + 1) * W + j] != arg) ||
@@ -202,10 +203,10 @@ cContoursBuilderGPU::clearAll() {
        widthGPU=nullptr;
     }
 
-    if(shiftGPU!=nullptr) {
+    /*if(shiftGPU!=nullptr) {
        cudaFree(shiftGPU);
        shiftGPU=nullptr;
-    }
+    }*/
 }
 
 void 
@@ -216,7 +217,7 @@ cContoursBuilderGPU::Zero() {
 	contoursCPU_sparseArr = nullptr;
 	mapGPU = nullptr;
 	contourGPU = nullptr;
-	shiftGPU = nullptr;
+    // shiftGPU = nullptr;
 	shiftGPU_sparse = nullptr;
 	widthGPU = nullptr;
 	heightGPU = nullptr;
@@ -445,10 +446,11 @@ cContoursBuilderGPU::prepareMemoryCPU() {
     contoursCPU_sparseArr = static_cast<INT*> (malloc(sizeof (INT) * (sparseShiftArr.back()))); // + sparseContoursVec.back().size())));
 
     for(size_t i = 0; i < sparseContoursVec.size(); ++i) {
-        INT shift = 0;
+        /*INT shift = 0;
         if(i > 0) {
             shift = sparseShiftArr[i-1];
-        }
+        }*/
+        INT shift = sparseShiftArr[i];
         memcpy(&contoursCPU_sparseArr[shift], sparseContoursVec[i].data(), sizeof(INT) * sparseContoursVec[i].size());
     }
 
@@ -477,6 +479,28 @@ cContoursBuilderGPU::copyMemory2GPU() {
     mem2d = cudaMemcpy(shiftGPU_sparse, sparseShiftArr.data(), sizeof(INT) * sparseShiftArr.size(), cudaMemcpyHostToDevice);
 
     mem2d = cudaMemcpy(contourGPU, contoursCPU_sparseArr, sizeof(MAPTYPE) * (sparseShiftArr.back()/* + sparseContoursVec.back().size()*/), cudaMemcpyHostToDevice);
+
+    QFile filep("shiftGPU_sparse.txt");
+    if (!filep.open(QFile::WriteOnly)) {
+
+    }
+
+    for (int i=0; i < sparseShiftArr.size(); ++i) {
+        QByteArray arr;
+        arr.append(QString("%1 ").arg(sparseShiftArr[i]));
+        filep.write(arr);
+    }
+
+    QFile filep2("contoursCPU_sparseArr.txt");
+    if (!filep2.open(QFile::WriteOnly)) {
+
+    }
+
+    for (int i=0; i < sparseShiftArr.back(); ++i) {
+        QByteArray arr;
+        arr.append(QString("%1 ").arg(contoursCPU_sparseArr[i]));
+        filep2.write(arr);
+    }
 
     return mem2d;
 }
